@@ -1,0 +1,21 @@
+# Compiled class files (hasil kompilasi tidak perlu di-push)
+*.class
+out/
+bin/
+build/
+
+# IDE & Editor files (konfigurasi lokal tiap anggota tidak perlu di-push)
+.vscode/
+.idea/
+*.iml
+*.project
+*.classpath
+.settings/
+
+# OS specific files (file sampah sistem operasi)
+.DS_Store
+Thumbs.db
+
+# Dependencies (Abaikan file .jar, TAPI izinkan .jar yang ada di dalam folder lib/)
+*.jar
+!lib/*.jar

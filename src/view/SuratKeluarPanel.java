@@ -80,6 +80,7 @@ public class SuratKeluarPanel extends JPanel {
         model = new DefaultTableModel(columnNames, 0);
 
         table = new JTable(model);
+        table.getTableHeader().setReorderingAllowed(false);
 
         table.setRowHeight(40);
         table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));

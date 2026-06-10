@@ -89,6 +89,7 @@ public class HomePanel extends JPanel {
 
         model = new DefaultTableModel(columns, 0);
         JTable table = new JTable(model);
+        table.getTableHeader().setReorderingAllowed(false);
         table.setRowHeight(35);
         table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
         table.setFont(new Font("Segoe UI", Font.PLAIN, 14));

@@ -8,6 +8,7 @@ import java.awt.event.ActionListener;
 public class DashboardFrame extends JFrame {
     private JPanel mainContentPanel;
     private CardLayout cardLayout;
+    private HomePanel homePanel;
 
     public DashboardFrame() {
         setTitle("Aether Project - Aplikasi Berkas Surat");
@@ -41,7 +42,7 @@ public class DashboardFrame extends JFrame {
         mainContentPanel.setBackground(new Color(248, 250, 252)); // Light background (#F8FAFC)
 
         // Create Panels
-        HomePanel homePanel = new HomePanel();
+        homePanel = new HomePanel();
         SuratMasukPanel suratMasukPanel = new SuratMasukPanel();
         SuratKeluarPanel suratKeluarPanel = new SuratKeluarPanel();
         ExportPdfPanel exportPdfPanel = new ExportPdfPanel();
@@ -74,6 +75,12 @@ public class DashboardFrame extends JFrame {
         add(mainContentPanel, BorderLayout.CENTER);
     }
 
+    public void refreshHome() {
+        if (homePanel != null) {
+            homePanel.refreshData();
+        }
+    }
+
     private void addMenuButton(JPanel sidebar, String text, String cardName) {
         JButton btn = new JButton(text);
         btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
@@ -88,6 +95,9 @@ public class DashboardFrame extends JFrame {
         btn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if ("Dashboard".equals(cardName)) {
+                    homePanel.refreshData();
+                }
                 cardLayout.show(mainContentPanel, cardName);
             }
         });

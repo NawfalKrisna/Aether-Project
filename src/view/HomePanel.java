@@ -1,23 +1,35 @@
 package view;
 
-import service.SuratService;
-import model.Surat;
-
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import java.awt.*;
+
+import dao.SuratKeluarDAO;
+import dao.SuratMasukDAO;
+import model.SuratMasuk;
+import model.SuratKeluar;
+
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.text.SimpleDateFormat;
 
+import java.awt.*;
+
 public class HomePanel extends JPanel {
-    private SuratService suratService;
+
+    private JLabel totalMasukLabel;
+    private JLabel totalKeluarLabel;
+    private JLabel totalSuratLabel;
+    private JLabel suratHariIniLabel;
+    private DefaultTableModel model;
 
     public HomePanel() {
-        this.suratService = new SuratService();
         setLayout(new BorderLayout(20, 20));
         setBackground(new Color(248, 250, 252));
         setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
         initUI();
+        loadDashboardData();
     }
 
     private void initUI() {
@@ -37,10 +49,15 @@ public class HomePanel extends JPanel {
         cardsPanel.setOpaque(false);
         cardsPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
 
-        cardsPanel.add(createCard("Surat Masuk", "10", new Color(220, 252, 231), new Color(22, 163, 74)));
-        cardsPanel.add(createCard("Surat Keluar", "10", new Color(224, 242, 254), new Color(2, 132, 199)));
-        cardsPanel.add(createCard("Total Surat", "20", new Color(243, 232, 255), new Color(147, 51, 234)));
-        cardsPanel.add(createCard("Surat Hari Ini", "0", new Color(255, 237, 213), new Color(234, 88, 12)));
+        totalMasukLabel = new JLabel();
+        totalKeluarLabel = new JLabel();
+        totalSuratLabel = new JLabel();
+        suratHariIniLabel = new JLabel();
+
+        cardsPanel.add(createCard("Surat Masuk", totalMasukLabel, new Color(220, 252, 231), new Color(22, 163, 74)));
+        cardsPanel.add(createCard("Surat Keluar", totalKeluarLabel, new Color(224, 242, 254), new Color(2, 132, 199)));
+        cardsPanel.add(createCard("Total Surat", totalSuratLabel, new Color(243, 232, 255), new Color(147, 51, 234)));
+        cardsPanel.add(createCard("Surat Hari Ini", suratHariIniLabel, new Color(255, 237, 213), new Color(234, 88, 12)));
 
         JPanel topContainer = new JPanel(new BorderLayout());
         topContainer.setOpaque(false);
@@ -62,17 +79,15 @@ public class HomePanel extends JPanel {
         tableTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
         tableContainer.add(tableTitle, BorderLayout.NORTH);
 
-        String[] columns = {"No", "Nomor Surat", "Jenis Surat", "Tanggal", "Perihal"};
-        DefaultTableModel model = new DefaultTableModel(columns, 0);
-        List<Surat> allSurat = suratService.getAllSurat();
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-        
-        int no = 1;
-        for (Surat s : allSurat) {
-            if (no > 10) break; // show only 10 recent
-            model.addRow(new Object[]{no++, s.getNomorSurat(), s.getJenisSurat(), sdf.format(s.getTanggal()), s.getPerihal()});
-        }
+        String[] columns = {
+                "No",
+                "Nomor Surat",
+                "Jenis Surat",
+                "Tanggal",
+                "Perihal"
+        };
 
+        model = new DefaultTableModel(columns, 0);
         JTable table = new JTable(model);
         table.setRowHeight(35);
         table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
@@ -87,7 +102,77 @@ public class HomePanel extends JPanel {
         add(tableContainer, BorderLayout.CENTER);
     }
 
-    private JPanel createCard(String title, String count, Color bgColor, Color textColor) {
+    public void refreshData() {
+        loadDashboardData();
+    }
+
+    private void loadDashboardData() {
+        SuratMasukDAO suratMasukDAO = new SuratMasukDAO();
+        SuratKeluarDAO suratKeluarDAO = new SuratKeluarDAO();
+
+        int totalMasuk = suratMasukDAO.count();
+        int totalKeluar = suratKeluarDAO.count();
+        int totalSurat = totalMasuk + totalKeluar;
+        int suratHariIni =
+                suratMasukDAO.countToday()
+            + suratKeluarDAO.countToday();
+
+        totalMasukLabel.setText(String.valueOf(totalMasuk));
+        totalKeluarLabel.setText(String.valueOf(totalKeluar));
+        totalSuratLabel.setText(String.valueOf(totalSurat));
+        suratHariIniLabel.setText(String.valueOf(suratHariIni));
+
+        List<Object[]> semuaSurat = new ArrayList<>();
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+
+        List<SuratMasuk> listMasuk = suratMasukDAO.getAll();
+        for (SuratMasuk surat : listMasuk) {
+            semuaSurat.add(new Object[]{
+                    surat.getTanggal(),
+                    surat.getNomorSurat(),
+                    "Surat Masuk",
+                    surat.getPerihal()
+            });
+        }
+
+        List<SuratKeluar> listKeluar = suratKeluarDAO.getAll();
+        for (SuratKeluar surat : listKeluar) {
+            semuaSurat.add(new Object[]{
+                    surat.getTanggal(),
+                    surat.getNomorSurat(),
+                    "Surat Keluar",
+                    surat.getPerihal()
+            });
+        }
+
+        Collections.sort(
+                semuaSurat,
+                new Comparator<Object[]>() {
+                    @Override
+                    public int compare(Object[] a, Object[] b) {
+                        return ((java.util.Date) b[0])
+                                .compareTo((java.util.Date) a[0]);
+                    }
+                }
+        );
+
+        model.setRowCount(0);
+        int no = 1;
+        for (Object[] row : semuaSurat) {
+            if (no > 10) {
+                break;
+            }
+            model.addRow(new Object[]{
+                    no++,
+                    row[1],
+                    row[2],
+                    sdf.format((java.util.Date) row[0]),
+                    row[3]
+            });
+        }
+    }
+
+    private JPanel createCard(String title, JLabel countLabel, Color bgColor, Color textColor) {
         JPanel card = new JPanel(new BorderLayout());
         card.setBackground(Color.WHITE);
         card.setBorder(BorderFactory.createCompoundBorder(
@@ -99,9 +184,9 @@ public class HomePanel extends JPanel {
         titleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         titleLabel.setForeground(Color.GRAY);
         
-        JLabel countLabel = new JLabel(count);
         countLabel.setFont(new Font("Segoe UI", Font.BOLD, 36));
         countLabel.setForeground(textColor);
+        countLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 
         card.add(titleLabel, BorderLayout.NORTH);
         card.add(countLabel, BorderLayout.CENTER);

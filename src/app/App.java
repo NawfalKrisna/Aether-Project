@@ -2,6 +2,9 @@ package app;
 
 import view.DashboardFrame;
 import com.formdev.flatlaf.FlatLightLaf;
+
+import database.DatabaseInitializer;
+
 import javax.swing.*;
 import java.awt.Color;
 
@@ -12,6 +15,7 @@ import java.awt.Color;
 public class App {
 
     public static void main(String[] args) {
+        DatabaseInitializer.initialize();
         // Run GUI construction on the Event-Dispatching Thread (EDT)
         SwingUtilities.invokeLater(new Runnable() {
             @Override

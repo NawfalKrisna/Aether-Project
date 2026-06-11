@@ -120,6 +120,9 @@ public class HomePanel extends JPanel {
         rowSorter = new TableRowSorter<>(model);
         JTable table = new JTable(model);
         table.setRowSorter(rowSorter);
+        for (java.awt.event.MouseListener ml : table.getTableHeader().getMouseListeners()) {
+        table.getTableHeader().removeMouseListener(ml);
+        }
         table.getTableHeader().setReorderingAllowed(false);
         table.setRowHeight(35);
         table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));

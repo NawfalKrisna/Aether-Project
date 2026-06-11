@@ -10,8 +10,7 @@ import javax.swing.table.TableRowSorter;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Date;
-import java.awt.Frame;
-import javax.swing.JOptionPane;
+
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
@@ -115,6 +114,11 @@ public class SuratKeluarPanel extends JPanel {
 
                 table = new JTable(model);
                 table.setRowSorter(rowSorter);
+
+                for (java.awt.event.MouseListener ml : table.getTableHeader().getMouseListeners()) {
+                table.getTableHeader().removeMouseListener(ml);
+                }
+
                 table.getTableHeader().setReorderingAllowed(false);
 
                 table.setRowHeight(40);

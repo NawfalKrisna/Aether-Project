@@ -119,6 +119,9 @@ public class SuratMasukPanel extends JPanel {
 
                 table = new JTable(model);
                 table.setRowSorter(rowSorter);
+                for (java.awt.event.MouseListener ml : table.getTableHeader().getMouseListeners()) {
+                table.getTableHeader().removeMouseListener(ml);
+}
                 table.getTableHeader().setReorderingAllowed(false);
 
                 table.setRowHeight(40);

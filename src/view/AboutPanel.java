@@ -102,10 +102,10 @@ public class AboutPanel extends JPanel {
         // =========================
         mainPanel.add(createCard(
                 "👨‍💻 Tim Pengembang",
-                "Wisnu Septa Hariyanto Putra\n" +
+                "Wisnu Septa Harianto Putra\n" +
                 "Nawfal Krisna Aghafazli\n" +
                 "Ridhoi Wahyu Saputra\n" +
-                "Hana Joma Naumi"
+                "Hana Joma Naomi"
         ));
 
         // ScrollPane digunakan agar isi panel dapat digulir

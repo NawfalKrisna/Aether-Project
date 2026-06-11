@@ -5,6 +5,15 @@ import java.awt.*;
 import java.io.File;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetAdapter;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetEvent;
+import java.util.List;
 import dao.SuratKeluarDAO;
 import model.SuratKeluar;
 import utils.FileUploadUtil;
@@ -123,33 +132,172 @@ public class TambahSuratKeluarDialog extends JDialog {
         formPanel.add(txtPerihal, gbc);
 
         JPanel uploadPanel = new JPanel(new BorderLayout());
-        uploadPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(226, 232, 240), 1),
-                BorderFactory.createEmptyBorder(20, 20, 20, 20)
-        ));
+        uploadPanel.setBorder(BorderFactory.createDashedBorder(new Color(180, 180, 180)));
         uploadPanel.setBackground(Color.WHITE);
         uploadPanel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        uploadPanel.setTransferHandler(new TransferHandler() {
+            @Override
+            public boolean canImport(TransferSupport support) {
+                return support.isDataFlavorSupported(
+                        DataFlavor.javaFileListFlavor);
+            }
 
-        JLabel uploadLabel = new JLabel("Klik untuk memilih file");
-        uploadLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        uploadPanel.add(uploadLabel, BorderLayout.CENTER);
+            @Override
+            public boolean importData(TransferSupport support) {
+
+                if (!canImport(support))
+                    return false;
+
+                try {
+
+                    Transferable t = support.getTransferable();
+
+                    @SuppressWarnings("unchecked")
+                    List<File> files = (List<File>) t.getTransferData(
+                            DataFlavor.javaFileListFlavor);
+
+                    if (!files.isEmpty()) {
+
+                        File file = files.get(0);
+
+                        selectedFilePath = file.getAbsolutePath();
+
+                        lblSelectedFile.setText(
+                                "✅ File dipilih: "
+                                        + file.getName());
+
+                        lblSelectedFile.setForeground(
+                                new Color(22, 163, 74));
+
+                        uploadPanel.setBorder(
+                                BorderFactory.createLineBorder(
+                                        new Color(22, 163, 74), 2));
+
+                        return true;
+                    }
+
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+
+                return false;
+            }
+        });
+
+        JLabel uploadIcon = new JLabel("\uD83D\uDCC2");
+        uploadIcon.setFont(new Font("Segoe UI", Font.PLAIN, 40));
+        uploadIcon.setHorizontalAlignment(SwingConstants.CENTER);
+
+        JLabel uploadLabel = new JLabel(
+                "<html><center><b>Klik untuk memilih file</b><br>"
+                        + "<span style='color:#888'>atau drag &amp; drop file ke sini</span></center></html>",
+                SwingConstants.CENTER);
+        uploadLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+
+        JPanel uploadCenter = new JPanel();
+        uploadCenter.setLayout(new BoxLayout(uploadCenter, BoxLayout.Y_AXIS));
+        uploadCenter.setOpaque(false);
+        uploadCenter.add(Box.createVerticalGlue());
+        uploadIcon.setAlignmentX(Component.CENTER_ALIGNMENT);
+        uploadLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        uploadCenter.add(uploadIcon);
+        uploadCenter.add(Box.createVerticalStrut(8));
+        uploadCenter.add(uploadLabel);
+        uploadCenter.add(Box.createVerticalGlue());
+        uploadPanel.add(uploadCenter, BorderLayout.CENTER);
 
         lblSelectedFile = new JLabel("Belum ada file dipilih");
         lblSelectedFile.setHorizontalAlignment(SwingConstants.CENTER);
         lblSelectedFile.setForeground(Color.GRAY);
+        lblSelectedFile.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         uploadPanel.add(lblSelectedFile, BorderLayout.SOUTH);
 
-        uploadPanel.addMouseListener(new MouseAdapter() {
+        // --- Shared click handler ---
+        MouseAdapter clickHandler = new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 JFileChooser chooser = new JFileChooser();
                 int result = chooser.showOpenDialog(TambahSuratKeluarDialog.this);
                 if (result == JFileChooser.APPROVE_OPTION) {
                     selectedFilePath = chooser.getSelectedFile().getAbsolutePath();
-                    lblSelectedFile.setText("File dipilih : " + chooser.getSelectedFile().getName());
+                    lblSelectedFile.setText("\u2705 File dipilih: " + chooser.getSelectedFile().getName());
+                    lblSelectedFile.setForeground(new Color(22, 163, 74));
+                    uploadPanel.setBorder(BorderFactory.createLineBorder(new Color(22, 163, 74), 2));
                 }
             }
-        });
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                uploadPanel.setBackground(new Color(239, 246, 255));
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                uploadPanel.setBackground(Color.WHITE);
+            }
+        };
+
+        uploadPanel.addMouseListener(clickHandler);
+        uploadCenter.addMouseListener(clickHandler);
+        uploadIcon.addMouseListener(clickHandler);
+        uploadLabel.addMouseListener(clickHandler);
+        lblSelectedFile.addMouseListener(clickHandler);
+
+        // --- Shared DropTarget handler ---
+        DropTargetAdapter dropHandler = new DropTargetAdapter() {
+            @Override
+            public void dragEnter(DropTargetDragEvent dtde) {
+                if (dtde.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+                    dtde.acceptDrag(DnDConstants.ACTION_COPY);
+                    uploadPanel.setBorder(BorderFactory.createLineBorder(new Color(37, 99, 235), 2));
+                    uploadPanel.setBackground(new Color(239, 246, 255));
+                    uploadLabel.setText(
+                            "<html><center><b style='color:#2563eb'>Lepaskan file di sini!</b></center></html>");
+                } else {
+                    dtde.rejectDrag();
+                }
+            }
+
+            @Override
+            public void dragExit(DropTargetEvent dte) {
+                uploadPanel.setBorder(BorderFactory.createDashedBorder(new Color(180, 180, 180)));
+                uploadPanel.setBackground(Color.WHITE);
+                uploadLabel.setText("<html><center><b>Klik untuk memilih file</b><br>"
+                        + "<span style='color:#888'>atau drag &amp; drop file ke sini</span></center></html>");
+            }
+
+            @Override
+            public void drop(DropTargetDropEvent dtde) {
+                try {
+                    dtde.acceptDrop(DnDConstants.ACTION_COPY);
+                    Transferable transferable = dtde.getTransferable();
+                    @SuppressWarnings("unchecked")
+                    List<File> files = (List<File>) transferable.getTransferData(DataFlavor.javaFileListFlavor);
+                    if (!files.isEmpty()) {
+                        File droppedFile = files.get(0);
+                        selectedFilePath = droppedFile.getAbsolutePath();
+                        lblSelectedFile.setText("\u2705 File dipilih: " + droppedFile.getName());
+                        lblSelectedFile.setForeground(new Color(22, 163, 74));
+                        uploadPanel.setBorder(BorderFactory.createLineBorder(new Color(22, 163, 74), 2));
+                        uploadPanel.setBackground(Color.WHITE);
+                        uploadLabel.setText("<html><center><b>Klik untuk memilih file</b><br>"
+                                + "<span style='color:#888'>atau drag &amp; drop file ke sini</span></center></html>");
+                    }
+                    dtde.dropComplete(true);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    dtde.dropComplete(false);
+                }
+            }
+        };
+
+        // Pasang DropTarget ke uploadPanel dan semua child-nya
+        // (Java DnD tidak propagate ke parent otomatis)
+        new DropTarget(uploadPanel, DnDConstants.ACTION_COPY, dropHandler, true);
+        new DropTarget(uploadCenter, DnDConstants.ACTION_COPY, dropHandler, true);
+        new DropTarget(uploadIcon, DnDConstants.ACTION_COPY, dropHandler, true);
+        new DropTarget(uploadLabel, DnDConstants.ACTION_COPY, dropHandler, true);
+        new DropTarget(lblSelectedFile, DnDConstants.ACTION_COPY, dropHandler, true);
 
         JPanel centerPanel = new JPanel(new BorderLayout(0, 20));
         centerPanel.setBorder(BorderFactory.createEmptyBorder(0, 20, 20, 20));
@@ -185,13 +333,13 @@ public class TambahSuratKeluarDialog extends JDialog {
                 return;
             }
             if (editingId.isEmpty() && selectedFilePath == null) {
-                    JOptionPane.showMessageDialog(this, "Silakan pilih file terlebih dahulu!");
-                    return;
-                }
+                JOptionPane.showMessageDialog(this, "Silakan pilih file terlebih dahulu!");
+                return;
+            }
 
             try {
                 Date tanggal = new SimpleDateFormat("dd/MM/yyyy").parse(txtTanggal.getText());
-                
+
                 String uploadedFilePath = existingFilePath;
                 if (selectedFilePath != null) {
                     try {
@@ -209,8 +357,7 @@ public class TambahSuratKeluarDialog extends JDialog {
                         tanggal,
                         txtPerihal.getText(),
                         txtTujuan.getText(),
-                        uploadedFilePath
-                );
+                        uploadedFilePath);
 
                 SuratKeluarDAO dao = new SuratKeluarDAO();
                 boolean berhasil;

@@ -4,11 +4,25 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DashboardFrame extends JFrame {
     private JPanel mainContentPanel;
     private CardLayout cardLayout;
     private HomePanel homePanel;
+
+    // Track all sidebar menu buttons so we can reset their colors
+    private final List<JButton> menuButtons = new ArrayList<>();
+
+    // Sidebar color palette
+    private static final Color SIDEBAR_BG  = new Color(15, 23, 42);   // #0F172A – default
+    private static final Color HOVER_BG    = new Color(30, 41, 59);   // #1E293B – on hover
+    private static final Color ACTIVE_BG   = new Color(37, 99, 235);  // #2563EB – selected
+    private static final Color DEFAULT_FG  = Color.WHITE;
+    private static final Color ACTIVE_FG   = Color.WHITE;
 
     public DashboardFrame() {
         setTitle("Aether Project - Aplikasi Berkas Surat");
@@ -81,27 +95,75 @@ public class DashboardFrame extends JFrame {
         }
     }
 
+    /**
+     * Reset every menu button back to its default (inactive) appearance.
+     * Call this before activating the newly-selected button.
+     */
+    private void resetAllMenuButtons() {
+        for (JButton btn : menuButtons) {
+            btn.setBackground(SIDEBAR_BG);
+            btn.setForeground(DEFAULT_FG);
+            btn.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            btn.setOpaque(true);
+        }
+    }
+
     private void addMenuButton(JPanel sidebar, String text, String cardName) {
         JButton btn = new JButton(text);
         btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
         btn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        btn.setBackground(new Color(15, 23, 42));
-        btn.setForeground(Color.WHITE);
+        btn.setBackground(SIDEBAR_BG);
+        btn.setForeground(DEFAULT_FG);
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
+        btn.setOpaque(true);
         btn.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
+
+        // --- Hover State ---
+        // Change background on mouse enter/exit, but only if the button
+        // is NOT the currently-active one (active color takes priority).
+        btn.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                // Only apply hover color when the button is not active
+                if (!btn.getBackground().equals(ACTIVE_BG)) {
+                    btn.setBackground(HOVER_BG);
+                }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                // Revert to default color when not active
+                if (!btn.getBackground().equals(ACTIVE_BG)) {
+                    btn.setBackground(SIDEBAR_BG);
+                }
+            }
+        });
+
+        // --- Active State (on click) ---
         btn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                // 1. Reset all buttons to default appearance
+                resetAllMenuButtons();
+
+                // 2. Mark the clicked button as active
+                btn.setBackground(ACTIVE_BG);
+                btn.setForeground(ACTIVE_FG);
+                btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+
+                // 3. Navigate to the selected panel
                 if ("Dashboard".equals(cardName)) {
                     homePanel.refreshData();
                 }
                 cardLayout.show(mainContentPanel, cardName);
             }
         });
-        
+
+        // Keep track of this button
+        menuButtons.add(btn);
+
         sidebar.add(btn);
         sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
     }

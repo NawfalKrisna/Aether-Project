@@ -5,11 +5,12 @@ import model.SuratKeluar;
 
 import java.util.List;
 import java.text.SimpleDateFormat;
+import java.util.Comparator;
+import java.util.Date;
 import javax.swing.*;
 import javax.swing.table.TableRowSorter;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Date;
 
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -66,7 +67,7 @@ public class SuratKeluarPanel extends JPanel {
                                 BorderFactory.createLineBorder(new Color(226, 232, 240), 1),
                                 BorderFactory.createEmptyBorder(20, 20, 20, 20)));
 
-                // Search Bar - layout sama dengan dashboard
+                // Search Bar + Sort Combo
                 JPanel searchPanel = new JPanel(new BorderLayout(8, 0));
                 searchPanel.setOpaque(false);
                 searchPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
@@ -88,6 +89,24 @@ public class SuratKeluarPanel extends JPanel {
                 searchRight.add(searchLabel);
                 searchRight.add(searchField);
 
+                // Sort by Date combo box
+                JLabel sortLabel = new JLabel("Urutkan Tanggal:");
+                sortLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+                sortLabel.setForeground(new Color(100, 116, 139));
+
+                JComboBox<String> sortDateCombo = new JComboBox<>(new String[] {
+                                "Terbaru ke Terlama",
+                                "Terlama ke Terbaru"
+                });
+                sortDateCombo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+                sortDateCombo.setPreferredSize(new Dimension(180, 30));
+
+                JPanel sortLeft = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+                sortLeft.setOpaque(false);
+                sortLeft.add(sortLabel);
+                sortLeft.add(sortDateCombo);
+
+                searchPanel.add(sortLeft, BorderLayout.WEST);
                 searchPanel.add(searchRight, BorderLayout.EAST);
                 tableContainer.add(searchPanel, BorderLayout.NORTH);
 
@@ -112,11 +131,28 @@ public class SuratKeluarPanel extends JPanel {
 
                 rowSorter = new TableRowSorter<>(model);
 
+                // Custom comparator: parse "dd/MM/yyyy" strings into real Date objects
+                // so sorting is chronological, NOT alphabetical.
+                rowSorter.setComparator(2, new Comparator<String>() {
+                        private final SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+
+                        @Override
+                        public int compare(String s1, String s2) {
+                                try {
+                                        Date d1 = sdf.parse(s1);
+                                        Date d2 = sdf.parse(s2);
+                                        return d1.compareTo(d2);
+                                } catch (Exception e) {
+                                        return 0;
+                                }
+                        }
+                });
+
                 table = new JTable(model);
                 table.setRowSorter(rowSorter);
 
                 for (java.awt.event.MouseListener ml : table.getTableHeader().getMouseListeners()) {
-                table.getTableHeader().removeMouseListener(ml);
+                        table.getTableHeader().removeMouseListener(ml);
                 }
 
                 table.getTableHeader().setReorderingAllowed(false);
@@ -149,6 +185,23 @@ public class SuratKeluarPanel extends JPanel {
 
                         public void changedUpdate(javax.swing.event.DocumentEvent e) {
                                 doFilter();
+                        }
+                });
+
+                // Sort combo box listener – apply sort order on the date column (index 2)
+                sortDateCombo.addActionListener(new java.awt.event.ActionListener() {
+                        @Override
+                        public void actionPerformed(java.awt.event.ActionEvent e) {
+                                String selected = (String) sortDateCombo.getSelectedItem();
+                                if ("Terbaru ke Terlama".equals(selected)) {
+                                        // DESCENDING: newest first
+                                        rowSorter.setSortKeys(java.util.Collections.singletonList(
+                                                        new RowSorter.SortKey(2, SortOrder.DESCENDING)));
+                                } else {
+                                        // ASCENDING: oldest first
+                                        rowSorter.setSortKeys(java.util.Collections.singletonList(
+                                                        new RowSorter.SortKey(2, SortOrder.ASCENDING)));
+                                }
                         }
                 });
 

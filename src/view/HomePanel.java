@@ -98,8 +98,22 @@ public class HomePanel extends JPanel {
         searchIcon.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         searchIcon.setForeground(new Color(100, 116, 139));
 
+        // Sort by Date combo box
+        JLabel sortLabel = new JLabel("Urutkan Tanggal:");
+        sortLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        sortLabel.setForeground(new Color(100, 116, 139));
+
+        JComboBox<String> sortDateCombo = new JComboBox<>(new String[] {
+                "Terbaru ke Terlama",
+                "Terlama ke Terbaru"
+        });
+        sortDateCombo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        sortDateCombo.setPreferredSize(new Dimension(180, 30));
+
         JPanel searchRight = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         searchRight.setOpaque(false);
+        searchRight.add(sortLabel);
+        searchRight.add(sortDateCombo);
         searchRight.add(searchIcon);
         searchRight.add(searchField);
 
@@ -118,10 +132,29 @@ public class HomePanel extends JPanel {
 
         model = new DefaultTableModel(columns, 0);
         rowSorter = new TableRowSorter<>(model);
+
+        // Custom comparator: parse "dd/MM/yyyy" strings into real Date objects
+        // so sorting is chronological, NOT alphabetical.
+        // Date is at column index 3 in this dashboard table.
+        rowSorter.setComparator(3, new Comparator<String>() {
+            private final SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+
+            @Override
+            public int compare(String s1, String s2) {
+                try {
+                    java.util.Date d1 = sdf.parse(s1);
+                    java.util.Date d2 = sdf.parse(s2);
+                    return d1.compareTo(d2);
+                } catch (Exception e) {
+                    return 0;
+                }
+            }
+        });
+
         JTable table = new JTable(model);
         table.setRowSorter(rowSorter);
         for (java.awt.event.MouseListener ml : table.getTableHeader().getMouseListeners()) {
-        table.getTableHeader().removeMouseListener(ml);
+            table.getTableHeader().removeMouseListener(ml);
         }
         table.getTableHeader().setReorderingAllowed(false);
         table.setRowHeight(35);
@@ -151,6 +184,23 @@ public class HomePanel extends JPanel {
 
             public void changedUpdate(javax.swing.event.DocumentEvent e) {
                 doFilter();
+            }
+        });
+
+        // Sort combo box listener – apply sort order on the date column (index 3)
+        sortDateCombo.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                String selected = (String) sortDateCombo.getSelectedItem();
+                if ("Terbaru ke Terlama".equals(selected)) {
+                    // DESCENDING: newest first
+                    rowSorter.setSortKeys(Collections.singletonList(
+                            new RowSorter.SortKey(3, SortOrder.DESCENDING)));
+                } else {
+                    // ASCENDING: oldest first
+                    rowSorter.setSortKeys(Collections.singletonList(
+                            new RowSorter.SortKey(3, SortOrder.ASCENDING)));
+                }
             }
         });
 

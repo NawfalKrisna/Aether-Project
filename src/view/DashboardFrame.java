@@ -13,16 +13,17 @@ public class DashboardFrame extends JFrame {
     private JPanel mainContentPanel;
     private CardLayout cardLayout;
     private HomePanel homePanel;
+    private ExportPdfPanel exportPdfPanel;
 
     // Track all sidebar menu buttons so we can reset their colors
     private final List<JButton> menuButtons = new ArrayList<>();
 
     // Sidebar color palette
-    private static final Color SIDEBAR_BG  = new Color(15, 23, 42);   // #0F172A – default
-    private static final Color HOVER_BG    = new Color(30, 41, 59);   // #1E293B – on hover
-    private static final Color ACTIVE_BG   = new Color(37, 99, 235);  // #2563EB – selected
-    private static final Color DEFAULT_FG  = Color.WHITE;
-    private static final Color ACTIVE_FG   = Color.WHITE;
+    private static final Color SIDEBAR_BG = new Color(15, 23, 42); // #0F172A – default
+    private static final Color HOVER_BG = new Color(30, 41, 59); // #1E293B – on hover
+    private static final Color ACTIVE_BG = new Color(37, 99, 235); // #2563EB – selected
+    private static final Color DEFAULT_FG = Color.WHITE;
+    private static final Color ACTIVE_FG = Color.WHITE;
 
     public DashboardFrame() {
         setTitle("Aether Project - Aplikasi Berkas Surat");
@@ -59,7 +60,7 @@ public class DashboardFrame extends JFrame {
         homePanel = new HomePanel();
         SuratMasukPanel suratMasukPanel = new SuratMasukPanel();
         SuratKeluarPanel suratKeluarPanel = new SuratKeluarPanel();
-        ExportPdfPanel exportPdfPanel = new ExportPdfPanel();
+        exportPdfPanel = new ExportPdfPanel();
         AboutPanel aboutPanel = new AboutPanel();
 
         // Add Panels to CardLayout
@@ -87,6 +88,50 @@ public class DashboardFrame extends JFrame {
 
         add(sidebar, BorderLayout.WEST);
         add(mainContentPanel, BorderLayout.CENTER);
+    }
+
+    /**
+     * Navigates back to the Dashboard panel and refreshes it.
+     * Called from ExportPdfPanel's "Back" button.
+     */
+    public void showDashboard() {
+        resetAllMenuButtons();
+        for (JButton btn : menuButtons) {
+            if ("Dashboard".equals(btn.getText())) {
+                btn.setBackground(ACTIVE_BG);
+                btn.setForeground(ACTIVE_FG);
+                btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                break;
+            }
+        }
+        homePanel.refreshData();
+        cardLayout.show(mainContentPanel, "Dashboard");
+    }
+
+    /**
+     * Switches to ExportPDF panel, passing the current table data for preview and
+     * download.
+     * Called from SuratMasukPanel / SuratKeluarPanel when "Export ke PDF" is
+     * clicked.
+     *
+     * @param columns  Column header names to display in preview
+     * @param data     Row data (each Object[] is one row)
+     * @param docTitle Document title used in the generated PDF (e.g. "Surat Masuk")
+     */
+    public void showExportPdf(String[] columns, java.util.List<Object[]> data, String docTitle) {
+        exportPdfPanel.loadData(columns, data, docTitle);
+        // Activate the Export PDF menu button styling
+        resetAllMenuButtons();
+        // Find and highlight the Export PDF button
+        for (JButton btn : menuButtons) {
+            if ("Export PDF".equals(btn.getText())) {
+                btn.setBackground(ACTIVE_BG);
+                btn.setForeground(ACTIVE_FG);
+                btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                break;
+            }
+        }
+        cardLayout.show(mainContentPanel, "ExportPDF");
     }
 
     public void refreshHome() {

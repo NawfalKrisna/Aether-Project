@@ -61,7 +61,41 @@ public class SuratMasukPanel extends JPanel {
                 btnAdd.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
                 headerPanel.add(title, BorderLayout.WEST);
-                headerPanel.add(btnAdd, BorderLayout.EAST);
+
+                // Right-side button group: Add + Export
+                JPanel headerButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+                headerButtons.setOpaque(false);
+
+                JButton btnExport = new JButton("\uD83D\uDCC4  Export ke PDF");
+                btnExport.setBackground(new Color(22, 163, 74)); // Green
+                btnExport.setForeground(Color.WHITE);
+                btnExport.setFocusPainted(false);
+                btnExport.setFont(new Font("Segoe UI", Font.BOLD, 13));
+                btnExport.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                btnExport.addActionListener(e -> {
+                        // Collect visible rows (respects current search filter)
+                        String[] exportCols = { "ID", "Nomor Surat", "Tanggal", "Pengirim", "Perihal", "File" };
+                        java.util.List<Object[]> exportData = new java.util.ArrayList<>();
+                        for (int i = 0; i < table.getRowCount(); i++) {
+                                int modelRow = table.convertRowIndexToModel(i);
+                                exportData.add(new Object[] {
+                                                model.getValueAt(modelRow, 0), // ID
+                                                model.getValueAt(modelRow, 1), // Nomor Surat
+                                                model.getValueAt(modelRow, 2), // Tanggal
+                                                model.getValueAt(modelRow, 3), // Pengirim
+                                                model.getValueAt(modelRow, 4), // Perihal
+                                                model.getValueAt(modelRow, 5) // File
+                                });
+                        }
+                        Frame frame = (Frame) SwingUtilities.getWindowAncestor(this);
+                        if (frame instanceof DashboardFrame) {
+                                ((DashboardFrame) frame).showExportPdf(exportCols, exportData, "Surat Masuk");
+                        }
+                });
+
+                headerButtons.add(btnExport);
+                headerButtons.add(btnAdd);
+                headerPanel.add(headerButtons, BorderLayout.EAST);
 
                 add(headerPanel, BorderLayout.NORTH);
 
@@ -124,13 +158,14 @@ public class SuratMasukPanel extends JPanel {
                                 "Perihal",
                                 "File",
                                 "Edit",
-                                "Delete"
+                                "Delete",
+                                "Aksi"
                 };
 
                 model = new DefaultTableModel(columnNames, 0) {
                         @Override
                         public boolean isCellEditable(int row, int column) {
-                                return column == 6 || column == 7;
+                                return column == 6 || column == 7 || column == 8;
                         }
                 };
 
@@ -330,15 +365,18 @@ public class SuratMasukPanel extends JPanel {
                                         surat.getPerihal(),
                                         surat.getFilePath(),
                                         "Edit",
-                                        "Delete"
+                                        "Delete",
+                                        "Download PDF"
                         });
                 }
 
-                // Add button renderers/editors for Edit/Delete
+                // Add button renderers/editors for Edit, Delete, and Aksi
                 table.getColumn("Edit").setCellRenderer(new ButtonRenderer());
                 table.getColumn("Edit").setCellEditor(new ButtonEditor(new JCheckBox()));
                 table.getColumn("Delete").setCellRenderer(new ButtonRenderer());
                 table.getColumn("Delete").setCellEditor(new ButtonEditor(new JCheckBox()));
+                table.getColumn("Aksi").setCellRenderer(new ButtonRenderer());
+                table.getColumn("Aksi").setCellEditor(new ButtonEditor(new JCheckBox()));
         }
 
         // Renderer for buttons
@@ -425,6 +463,49 @@ public class SuratMasukPanel extends JPanel {
                                                         } else {
                                                                 JOptionPane.showMessageDialog(SuratMasukPanel.this,
                                                                                 "Gagal menghapus data");
+                                                        }
+                                                }
+                                        } else if ("Download PDF".equals(label)) {
+                                                String nomor = String.valueOf(model.getValueAt(row, 1));
+                                                String tanggalStr = String.valueOf(model.getValueAt(row, 2));
+                                                String pengirim = String.valueOf(model.getValueAt(row, 3));
+                                                String perihal = String.valueOf(model.getValueAt(row, 4));
+
+                                                // Build field pairs for the form-style PDF
+                                                String[][] fields = {
+                                                                { "ID", id },
+                                                                { "Nomor Surat", nomor },
+                                                                { "Tanggal", tanggalStr },
+                                                                { "Pengirim", pengirim },
+                                                                { "Perihal", perihal }
+                                                };
+
+                                                // Build dynamic default filename
+                                                String safePengirim = pengirim.replaceAll("[^a-zA-Z0-9]", "_");
+                                                String defaultName = "Surat_Masuk_" + id + "_" + safePengirim + ".pdf";
+
+                                                JFileChooser chooser = new JFileChooser();
+                                                chooser.setDialogTitle("Simpan Detail PDF");
+                                                chooser.setSelectedFile(new java.io.File(defaultName));
+                                                chooser.setFileFilter(
+                                                                new javax.swing.filechooser.FileNameExtensionFilter(
+                                                                                "PDF Files (*.pdf)", "pdf"));
+
+                                                int result = chooser.showSaveDialog(SuratMasukPanel.this);
+                                                if (result == JFileChooser.APPROVE_OPTION) {
+                                                        String filePath = chooser.getSelectedFile().getAbsolutePath();
+                                                        if (!filePath.toLowerCase().endsWith(".pdf")) {
+                                                                filePath += ".pdf";
+                                                        }
+                                                        boolean ok = service.PdfExporter.exportDetailToPdf(
+                                                                        "Detail Surat Masuk", fields, filePath);
+                                                        if (ok) {
+                                                                JOptionPane.showMessageDialog(SuratMasukPanel.this,
+                                                                                "PDF berhasil disimpan:\n" + filePath);
+                                                        } else {
+                                                                JOptionPane.showMessageDialog(SuratMasukPanel.this,
+                                                                                "Gagal membuat PDF.",
+                                                                                "Error", JOptionPane.ERROR_MESSAGE);
                                                         }
                                                 }
                                         }

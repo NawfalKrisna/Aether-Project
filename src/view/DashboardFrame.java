@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DashboardFrame extends JFrame {
+    private JLabel title;
     private JPanel mainContentPanel;
     private CardLayout cardLayout;
     private HomePanel homePanel;
@@ -59,7 +60,7 @@ public class DashboardFrame extends JFrame {
         header.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
         // Judul kiri
-        JLabel title = new JLabel("AETHER PROJECT");
+        title = new JLabel("AETHER PROJECT");
         title.setForeground(Color.WHITE);
         title.setFont(new Font("Segoe UI", Font.BOLD, 16));
 
@@ -270,6 +271,7 @@ public class DashboardFrame extends JFrame {
                     homePanel.refreshData();
                 }
                 cardLayout.show(mainContentPanel, cardName);
+                setPageTitle(text);
             }
         });
 
@@ -278,5 +280,9 @@ public class DashboardFrame extends JFrame {
 
         sidebar.add(btn);
         sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
+    }
+
+        public void setPageTitle(String text) {
+        title.setText(text);
     }
 }

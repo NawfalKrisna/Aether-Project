@@ -16,87 +16,94 @@ public class DashboardFrame extends JFrame {
     private HomePanel homePanel;
     private ExportPdfPanel exportPdfPanel;
 
-    // Track all sidebar menu buttons so we can reset their colors
+    // Menyimpan semua tombol menu sidebar agar mudah di-reset warnanya
     private final List<JButton> menuButtons = new ArrayList<>();
 
-    // Sidebar color palette
+    // Warna utama sidebar dan status tombol
     private static final Color SIDEBAR_BG = new Color(15, 23, 42); // #0F172A – default
+    // Warna saat kursor mouse berada di atas tombol
     private static final Color HOVER_BG = new Color(30, 41, 59); // #1E293B – on hover
+    // Warna tombol yang sedang aktif/dipilih
     private static final Color ACTIVE_BG = new Color(37, 99, 235); // #2563EB – selected
+    // Warna teks default
     private static final Color DEFAULT_FG = Color.WHITE;
+    // Warna teks default
     private static final Color ACTIVE_FG = Color.WHITE;
 
+    // Konstruktor utama DashboardFrame
+    // Berfungsi mengatur properti awal frame dan memanggil tampilan utama
     public DashboardFrame() {
         setTitle("Aether Project - Aplikasi Berkas Surat");
-        setUndecorated(true); 
-        setExtendedState(JFrame.MAXIMIZED_BOTH); 
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE); 
+        setUndecorated(true);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         initUI();
 
         addWindowListener(new java.awt.event.WindowAdapter() {
-    @Override
-    public void windowClosing(java.awt.event.WindowEvent e) {
-        int confirm = JOptionPane.showConfirmDialog(
-            null,
-            "Yakin mau keluar aplikasi?",
-            "Konfirmasi",
-            JOptionPane.YES_NO_OPTION
-        );
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                int confirm = JOptionPane.showConfirmDialog(
+                        null,
+                        "Yakin mau keluar aplikasi?",
+                        "Konfirmasi",
+                        JOptionPane.YES_NO_OPTION);
 
-        if (confirm == JOptionPane.YES_OPTION) {
-            System.exit(0);
-        }
-    }
-});
+                if (confirm == JOptionPane.YES_OPTION) {
+                    System.exit(0);
+                }
+            }
+        });
     }
 
+    // Method untuk membangun seluruh tampilan aplikasi
+    // Meliputi header, sidebar, dan area konten utama
     private void initUI() {
         setLayout(new BorderLayout());
 
-        // Header Panel
+        // Membuat panel header di bagian atas aplikasi
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(new Color(15, 23, 42));
         header.setPreferredSize(new Dimension(getWidth(), 50));
         header.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
-        // Judul kiri
+        // Label judul aplikasi yang ditampilkan pada header
         title = new JLabel("AETHER PROJECT");
         title.setForeground(Color.WHITE);
         title.setFont(new Font("Segoe UI", Font.BOLD, 16));
 
-        // Tombol keluar kanan
+        // Tombol keluar aplikasi yang berada di pojok kanan atas header
         JButton btnExit = new JButton("X");
-        btnExit.setForeground(Color.RED);   
+        btnExit.setForeground(Color.RED);
         btnExit.setFocusPainted(false);
         btnExit.setBorderPainted(false);
         btnExit.setContentAreaFilled(false);
+        // Mengubah tampilan tombol saat mouse diarahkan ke tombol keluar
         btnExit.addMouseListener(new MouseAdapter() {
-    public void mouseEntered(MouseEvent e) {
-        btnExit.setOpaque(true);
-        btnExit.setBackground(Color.RED);
-        btnExit.setForeground(Color.WHITE);
-    }
+            public void mouseEntered(MouseEvent e) {
+                btnExit.setOpaque(true);
+                btnExit.setBackground(Color.RED);
+                btnExit.setForeground(Color.WHITE);
+            }
 
-    public void mouseExited(MouseEvent e) {
-        btnExit.setOpaque(false);
-        btnExit.setBackground(null);
-        btnExit.setForeground(Color.RED);
-    }
-});
+            public void mouseExited(MouseEvent e) {
+                btnExit.setOpaque(false);
+                btnExit.setBackground(null);
+                btnExit.setForeground(Color.RED);
+            }
+        });
         btnExit.setFont(new Font("Segoe UI", Font.BOLD, 16));
 
         btnExit.addActionListener(e -> {
-    int confirm = JOptionPane.showConfirmDialog(
-        this,
-        "Yakin ingin keluar aplikasi?",
-        "Konfirmasi",
-        JOptionPane.YES_NO_OPTION
-    );
+            int confirm = JOptionPane.showConfirmDialog(
+                    this,
+                    "Yakin ingin keluar aplikasi?",
+                    "Konfirmasi",
+                    JOptionPane.YES_NO_OPTION);
 
-    if (confirm == JOptionPane.YES_OPTION) {
-        System.exit(0);
-    }
-});
+            if (confirm == JOptionPane.YES_OPTION) {
+                System.exit(0);
+            }
+        });
 
         header.add(title, BorderLayout.WEST);
         header.add(btnExit, BorderLayout.EAST);
@@ -105,6 +112,7 @@ public class DashboardFrame extends JFrame {
         add(header, BorderLayout.NORTH);
 
         // Sidebar Panel
+        // Membuat panel sidebar sebagai menu navigasi aplikasi
         JPanel sidebar = new JPanel();
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
         sidebar.setBackground(new Color(15, 23, 42)); // Dark blue background (#0F172A)
@@ -112,6 +120,7 @@ public class DashboardFrame extends JFrame {
         sidebar.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
 
         // Logo Area
+        // Label logo atau nama aplikasi pada sidebar
         JLabel logoLabel = new JLabel("AETHER PROJECT");
         logoLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
         logoLabel.setForeground(Color.WHITE);
@@ -119,16 +128,20 @@ public class DashboardFrame extends JFrame {
         logoLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 30, 0));
         sidebar.add(logoLabel);
 
-        // Main Content Area with CardLayout
+        // CardLayout digunakan untuk berpindah antar halaman tanpa membuka window baru
         cardLayout = new CardLayout();
         mainContentPanel = new JPanel(cardLayout);
         mainContentPanel.setBackground(new Color(248, 250, 252)); // Light background (#F8FAFC)
 
-        // Create Panels
+        // Membuat objek halaman Dashboard
         homePanel = new HomePanel();
+        // Membuat objek halaman Surat Masuk
         SuratMasukPanel suratMasukPanel = new SuratMasukPanel();
+        // Membuat objek halaman Surat Keluar
         SuratKeluarPanel suratKeluarPanel = new SuratKeluarPanel();
+        // Membuat objek halaman Export PDF
         exportPdfPanel = new ExportPdfPanel();
+        // Membuat objek halaman About
         AboutPanel aboutPanel = new AboutPanel();
 
         // Add Panels to CardLayout
@@ -139,6 +152,7 @@ public class DashboardFrame extends JFrame {
         mainContentPanel.add(aboutPanel, "About");
 
         // Menu Buttons
+        // Menambahkan tombol menu ke sidebar beserta tujuan panel yang ditampilkan saat tombol diklik
         addMenuButton(sidebar, "Dashboard", "Dashboard");
         addMenuButton(sidebar, "Surat Masuk", "SuratMasuk");
         addMenuButton(sidebar, "Surat Keluar", "SuratKeluar");
@@ -159,9 +173,9 @@ public class DashboardFrame extends JFrame {
     }
 
     /**
-     * Navigates back to the Dashboard panel and refreshes it.
-     * Called from ExportPdfPanel's "Back" button.
-     */
+ * Menampilkan kembali halaman Dashboard
+ * serta memperbarui data yang ditampilkan.
+ */
     public void showDashboard() {
         resetAllMenuButtons();
         for (JButton btn : menuButtons) {
@@ -177,15 +191,15 @@ public class DashboardFrame extends JFrame {
     }
 
     /**
-     * Switches to ExportPDF panel, passing the current table data for preview and
-     * download.
-     * Called from SuratMasukPanel / SuratKeluarPanel when "Export ke PDF" is
-     * clicked.
-     *
-     * @param columns  Column header names to display in preview
-     * @param data     Row data (each Object[] is one row)
-     * @param docTitle Document title used in the generated PDF (e.g. "Surat Masuk")
-     */
+ * Menampilkan halaman Export PDF
+ * dan mengirimkan data tabel yang akan diekspor.
+ *
+ * @param columns Nama kolom tabel
+ * @param data Data isi tabel
+ * @param docTitle Judul dokumen PDF
+ */
+
+    
     public void showExportPdf(String[] columns, java.util.List<Object[]> data, String docTitle) {
         exportPdfPanel.loadData(columns, data, docTitle);
         // Activate the Export PDF menu button styling
@@ -202,16 +216,17 @@ public class DashboardFrame extends JFrame {
         cardLayout.show(mainContentPanel, "ExportPDF");
     }
 
+    // Memperbarui data yang ada pada halaman Dashboard
     public void refreshHome() {
         if (homePanel != null) {
             homePanel.refreshData();
         }
     }
 
-    /**
-     * Reset every menu button back to its default (inactive) appearance.
-     * Call this before activating the newly-selected button.
-     */
+   /**
+ * Mengembalikan seluruh tombol menu ke tampilan normal
+ * sebelum salah satu tombol diaktifkan.
+ */
     private void resetAllMenuButtons() {
         for (JButton btn : menuButtons) {
             btn.setBackground(SIDEBAR_BG);
@@ -233,9 +248,14 @@ public class DashboardFrame extends JFrame {
         btn.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // --- Hover State ---
-        // Change background on mouse enter/exit, but only if the button
-        // is NOT the currently-active one (active color takes priority).
+
+       /**
+ * Membuat tombol menu sidebar beserta fungsi navigasinya.
+ *
+ * @param sidebar Panel sidebar tempat tombol ditambahkan
+ * @param text Teks yang ditampilkan pada tombol
+ * @param cardName Nama panel tujuan pada CardLayout
+ */
         btn.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
@@ -254,19 +274,19 @@ public class DashboardFrame extends JFrame {
             }
         });
 
-        // --- Active State (on click) ---
+        // Menangani aksi saat tombol menu diklik
         btn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // 1. Reset all buttons to default appearance
+                // Mengembalikan semua tombol ke kondisi tidak aktif
                 resetAllMenuButtons();
 
-                // 2. Mark the clicked button as active
+                // Menandai tombol yang dipilih sebagai tombol aktif
                 btn.setBackground(ACTIVE_BG);
                 btn.setForeground(ACTIVE_FG);
                 btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
-                // 3. Navigate to the selected panel
+                // Menampilkan halaman yang dipilih pada area konten
                 if ("Dashboard".equals(cardName)) {
                     homePanel.refreshData();
                 }
@@ -281,8 +301,8 @@ public class DashboardFrame extends JFrame {
         sidebar.add(btn);
         sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
     }
-
-        public void setPageTitle(String text) {
+// Mengubah judul halaman pada bagian header sesuai dengan menu yang dipilih
+    public void setPageTitle(String text) {
         title.setText(text);
     }
 }

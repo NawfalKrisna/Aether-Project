@@ -27,14 +27,81 @@ public class DashboardFrame extends JFrame {
 
     public DashboardFrame() {
         setTitle("Aether Project - Aplikasi Berkas Surat");
-        setUndecorated(true); // 🔥 hapus title bar
-setExtendedState(JFrame.MAXIMIZED_BOTH); // 🔥 fullscreen
-setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE); // 🔥 biar kita kontrol exit sendiri
+        setUndecorated(true); 
+        setExtendedState(JFrame.MAXIMIZED_BOTH); 
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE); 
         initUI();
+
+        addWindowListener(new java.awt.event.WindowAdapter() {
+    @Override
+    public void windowClosing(java.awt.event.WindowEvent e) {
+        int confirm = JOptionPane.showConfirmDialog(
+            null,
+            "Yakin mau keluar aplikasi?",
+            "Konfirmasi",
+            JOptionPane.YES_NO_OPTION
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            System.exit(0);
+        }
+    }
+});
     }
 
     private void initUI() {
         setLayout(new BorderLayout());
+
+        // Header Panel
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBackground(new Color(15, 23, 42));
+        header.setPreferredSize(new Dimension(getWidth(), 50));
+        header.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+
+        // Judul kiri
+        JLabel title = new JLabel("AETHER PROJECT");
+        title.setForeground(Color.WHITE);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 16));
+
+        // Tombol keluar kanan
+        JButton btnExit = new JButton("X");
+        btnExit.setForeground(Color.RED);   
+        btnExit.setFocusPainted(false);
+        btnExit.setBorderPainted(false);
+        btnExit.setContentAreaFilled(false);
+        btnExit.addMouseListener(new MouseAdapter() {
+    public void mouseEntered(MouseEvent e) {
+        btnExit.setOpaque(true);
+        btnExit.setBackground(Color.RED);
+        btnExit.setForeground(Color.WHITE);
+    }
+
+    public void mouseExited(MouseEvent e) {
+        btnExit.setOpaque(false);
+        btnExit.setBackground(null);
+        btnExit.setForeground(Color.RED);
+    }
+});
+        btnExit.setFont(new Font("Segoe UI", Font.BOLD, 16));
+
+        btnExit.addActionListener(e -> {
+    int confirm = JOptionPane.showConfirmDialog(
+        this,
+        "Yakin ingin keluar aplikasi?",
+        "Konfirmasi",
+        JOptionPane.YES_NO_OPTION
+    );
+
+    if (confirm == JOptionPane.YES_OPTION) {
+        System.exit(0);
+    }
+});
+
+        header.add(title, BorderLayout.WEST);
+        header.add(btnExit, BorderLayout.EAST);
+
+        // Tambahin ke frame
+        add(header, BorderLayout.NORTH);
 
         // Sidebar Panel
         JPanel sidebar = new JPanel();

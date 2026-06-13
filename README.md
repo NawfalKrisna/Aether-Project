@@ -167,8 +167,8 @@ Project ini menggunakan pendekatan modular:
 | Name                      | NIM          | Role      |
 | ------------------------- | ------------ | --------- |
 | Wisnu Septa Harianto Putra| 242502040041 | Backend   |
-| Hana Joma Naomi           | 242502040050 | Frontend  |
-| Nawfal Krisna Aghafazli   | 242502040070 | Full Stack|
+| Hana Joma Naomi           | 242502040050 | Full Stack|
+| Nawfal Krisna Aghafazli   | 242502040070 | Frontend  |
 | Ridhoi Wahyu Saputra      | 242502040115 | UI / UX   |
 
 ---

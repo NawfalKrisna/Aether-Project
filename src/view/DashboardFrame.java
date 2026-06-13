@@ -27,9 +27,9 @@ public class DashboardFrame extends JFrame {
 
     public DashboardFrame() {
         setTitle("Aether Project - Aplikasi Berkas Surat");
-        setSize(1200, 800);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null); // Center screen
+        setUndecorated(true); // 🔥 hapus title bar
+setExtendedState(JFrame.MAXIMIZED_BOTH); // 🔥 fullscreen
+setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE); // 🔥 biar kita kontrol exit sendiri
         initUI();
     }
 

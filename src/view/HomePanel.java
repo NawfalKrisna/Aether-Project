@@ -26,6 +26,7 @@ public class HomePanel extends JPanel {
     private DefaultTableModel model;
     private TableRowSorter<DefaultTableModel> rowSorter;
     private JTextField searchField;
+    private JComboBox<String> filterJenisCombo;
 
     public HomePanel() {
         setLayout(new BorderLayout(20, 20));
@@ -110,10 +111,25 @@ public class HomePanel extends JPanel {
         sortDateCombo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         sortDateCombo.setPreferredSize(new Dimension(180, 30));
 
+        // Filter Jenis Surat combo box
+        JLabel filterLabel = new JLabel("Jenis Surat:");
+        filterLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        filterLabel.setForeground(new Color(100, 116, 139));
+
+        filterJenisCombo = new JComboBox<>(new String[] {
+                "Semua Jenis",
+                "Surat Masuk",
+                "Surat Keluar"
+        });
+        filterJenisCombo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        filterJenisCombo.setPreferredSize(new Dimension(140, 30));
+
         JPanel searchRight = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         searchRight.setOpaque(false);
         searchRight.add(sortLabel);
         searchRight.add(sortDateCombo);
+        searchRight.add(filterLabel);
+        searchRight.add(filterJenisCombo);
         searchRight.add(searchIcon);
         searchRight.add(searchField);
 
@@ -163,27 +179,25 @@ public class HomePanel extends JPanel {
         table.setShowVerticalLines(false);
         table.setGridColor(new Color(226, 232, 240));
 
-        // Wire up search
+        // Wire up search + filter combo to the shared applyFilters method
         searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-            private void doFilter() {
-                String text = searchField.getText().trim();
-                if (text.isEmpty()) {
-                    rowSorter.setRowFilter(null);
-                } else {
-                    rowSorter.setRowFilter(RowFilter.regexFilter("(?i)" + java.util.regex.Pattern.quote(text)));
-                }
-            }
-
             public void insertUpdate(javax.swing.event.DocumentEvent e) {
-                doFilter();
+                applyFilters();
             }
 
             public void removeUpdate(javax.swing.event.DocumentEvent e) {
-                doFilter();
+                applyFilters();
             }
 
             public void changedUpdate(javax.swing.event.DocumentEvent e) {
-                doFilter();
+                applyFilters();
+            }
+        });
+
+        filterJenisCombo.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                applyFilters();
             }
         });
 
@@ -213,6 +227,36 @@ public class HomePanel extends JPanel {
 
     public void refreshData() {
         loadDashboardData();
+    }
+
+    /**
+     * Combines the search text filter and the "Jenis Surat" dropdown filter
+     * using RowFilter.andFilter. Called by both the search DocumentListener
+     * and the combo box ActionListener.
+     */
+    private void applyFilters() {
+        java.util.List<RowFilter<DefaultTableModel, Integer>> filters = new ArrayList<>();
+
+        // 1. Text search filter (searches across all columns)
+        String text = searchField.getText().trim();
+        if (!text.isEmpty()) {
+            filters.add(RowFilter.regexFilter("(?i)" + java.util.regex.Pattern.quote(text)));
+        }
+
+        // 2. Jenis Surat filter (column index 2)
+        String jenis = (String) filterJenisCombo.getSelectedItem();
+        if (jenis != null && !"Semua Jenis".equals(jenis)) {
+            filters.add(RowFilter.regexFilter("^" + java.util.regex.Pattern.quote(jenis) + "$", 2));
+        }
+
+        // 3. Apply combined filter
+        if (filters.isEmpty()) {
+            rowSorter.setRowFilter(null);
+        } else if (filters.size() == 1) {
+            rowSorter.setRowFilter(filters.get(0));
+        } else {
+            rowSorter.setRowFilter(RowFilter.andFilter(filters));
+        }
     }
 
     private void loadDashboardData() {

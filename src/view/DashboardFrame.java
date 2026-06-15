@@ -77,7 +77,7 @@ public class DashboardFrame extends JFrame {
         title.setFont(new Font("Segoe UI", Font.BOLD, 16));
 
         // Tombol keluar aplikasi yang berada di pojok kanan atas header
-        JButton btnExit = new JButton("✕");
+        JButton btnExit = new JButton("X");
         btnExit.setForeground(Color.WHITE);
         btnExit.setBackground(new Color(220, 38, 38)); // merah
         btnExit.setFocusPainted(false);
@@ -86,6 +86,7 @@ public class DashboardFrame extends JFrame {
         btnExit.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnExit.setPreferredSize(new Dimension(45, 30));
         btnExit.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btnExit.setMargin(new Insets(0, 0, 0, 0));
 
         // Hover effect
         btnExit.addMouseListener(new MouseAdapter() {
@@ -97,8 +98,6 @@ public class DashboardFrame extends JFrame {
                 btnExit.setBackground(new Color(220, 38, 38));
             }
         });
-        btnExit.setFont(new Font("Segoe UI", Font.BOLD, 16));
-
         btnExit.addActionListener(e -> {
             int confirm = JOptionPane.showConfirmDialog(
                     this,
@@ -112,7 +111,7 @@ public class DashboardFrame extends JFrame {
         });
 
         // MINIMIZE
-        JButton btnMinimize = new JButton("—");
+        JButton btnMinimize = new JButton("_");
         btnMinimize.setForeground(Color.WHITE);
         btnMinimize.setBackground(new Color(30, 41, 59));
         btnMinimize.setFocusPainted(false);
@@ -121,6 +120,7 @@ public class DashboardFrame extends JFrame {
         btnMinimize.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnMinimize.setPreferredSize(new Dimension(45, 30));
         btnMinimize.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btnMinimize.setMargin(new Insets(0, 0, 0, 0));
 
         btnMinimize.addActionListener(e -> {
             setExtendedState(JFrame.ICONIFIED);
@@ -136,9 +136,8 @@ public class DashboardFrame extends JFrame {
             }
         });
 
-
         // MAXIMIZE
-        JButton btnMaximize = new JButton("▢");
+        JButton btnMaximize = new JButton("\u25A1");
         btnMaximize.setForeground(Color.WHITE);
         btnMaximize.setBackground(new Color(30, 41, 59));
         btnMaximize.setFocusPainted(false);
@@ -147,12 +146,13 @@ public class DashboardFrame extends JFrame {
         btnMaximize.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnMaximize.setPreferredSize(new Dimension(45, 30));
         btnMaximize.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btnMaximize.setMargin(new Insets(0, 0, 0, 0));
 
         btnMaximize.addActionListener(e -> {
             if (isMaximized) {
                 // balik ke ukuran sebelumnya
                 setSize(normalBounds.width, normalBounds.height);
-        setLocationRelativeTo(null); // INI YANG BIKIN CENTER
+                setLocationRelativeTo(null); // INI YANG BIKIN CENTER
                 isMaximized = false;
             } else {
                 // simpan ukuran sebelum maximize
@@ -180,8 +180,8 @@ public class DashboardFrame extends JFrame {
             }
         });
 
-                header.add(title, BorderLayout.WEST);
-                final Point[] mouseDownCompCoords = {null};
+        header.add(title, BorderLayout.WEST);
+        final Point[] mouseDownCompCoords = { null };
 
         header.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
@@ -193,9 +193,8 @@ public class DashboardFrame extends JFrame {
             public void mouseDragged(MouseEvent e) {
                 Point currCoords = e.getLocationOnScreen();
                 setLocation(
-                    currCoords.x - mouseDownCompCoords[0].x,
-                    currCoords.y - mouseDownCompCoords[0].y
-                );
+                        currCoords.x - mouseDownCompCoords[0].x,
+                        currCoords.y - mouseDownCompCoords[0].y);
             }
         });
         JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 5));
@@ -251,7 +250,8 @@ public class DashboardFrame extends JFrame {
         mainContentPanel.add(aboutPanel, "About");
 
         // Menu Buttons
-        // Menambahkan tombol menu ke sidebar beserta tujuan panel yang ditampilkan saat tombol diklik
+        // Menambahkan tombol menu ke sidebar beserta tujuan panel yang ditampilkan saat
+        // tombol diklik
         addMenuButton(sidebar, "Dashboard", "Dashboard");
         addMenuButton(sidebar, "Surat Masuk", "SuratMasuk");
         addMenuButton(sidebar, "Surat Keluar", "SuratKeluar");
@@ -272,9 +272,9 @@ public class DashboardFrame extends JFrame {
     }
 
     /**
- * Menampilkan kembali halaman Dashboard
- * serta memperbarui data yang ditampilkan.
- */
+     * Menampilkan kembali halaman Dashboard
+     * serta memperbarui data yang ditampilkan.
+     */
     public void showDashboard() {
         resetAllMenuButtons();
         for (JButton btn : menuButtons) {
@@ -290,15 +290,14 @@ public class DashboardFrame extends JFrame {
     }
 
     /**
- * Menampilkan halaman Export PDF
- * dan mengirimkan data tabel yang akan diekspor.
- *
- * @param columns Nama kolom tabel
- * @param data Data isi tabel
- * @param docTitle Judul dokumen PDF
- */
+     * Menampilkan halaman Export PDF
+     * dan mengirimkan data tabel yang akan diekspor.
+     *
+     * @param columns  Nama kolom tabel
+     * @param data     Data isi tabel
+     * @param docTitle Judul dokumen PDF
+     */
 
-    
     public void showExportPdf(String[] columns, java.util.List<Object[]> data, String docTitle) {
         exportPdfPanel.loadData(columns, data, docTitle);
         // Activate the Export PDF menu button styling
@@ -322,10 +321,10 @@ public class DashboardFrame extends JFrame {
         }
     }
 
-   /**
- * Mengembalikan seluruh tombol menu ke tampilan normal
- * sebelum salah satu tombol diaktifkan.
- */
+    /**
+     * Mengembalikan seluruh tombol menu ke tampilan normal
+     * sebelum salah satu tombol diaktifkan.
+     */
     private void resetAllMenuButtons() {
         for (JButton btn : menuButtons) {
             btn.setBackground(SIDEBAR_BG);
@@ -347,14 +346,13 @@ public class DashboardFrame extends JFrame {
         btn.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-
-       /**
- * Membuat tombol menu sidebar beserta fungsi navigasinya.
- *
- * @param sidebar Panel sidebar tempat tombol ditambahkan
- * @param text Teks yang ditampilkan pada tombol
- * @param cardName Nama panel tujuan pada CardLayout
- */
+        /**
+         * Membuat tombol menu sidebar beserta fungsi navigasinya.
+         *
+         * @param sidebar  Panel sidebar tempat tombol ditambahkan
+         * @param text     Teks yang ditampilkan pada tombol
+         * @param cardName Nama panel tujuan pada CardLayout
+         */
         btn.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
@@ -400,7 +398,8 @@ public class DashboardFrame extends JFrame {
         sidebar.add(btn);
         sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
     }
-// Mengubah judul halaman pada bagian header sesuai dengan menu yang dipilih
+
+    // Mengubah judul halaman pada bagian header sesuai dengan menu yang dipilih
     public void setPageTitle(String text) {
         title.setText(text);
     }

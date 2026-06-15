@@ -15,6 +15,8 @@ public class DashboardFrame extends JFrame {
     private CardLayout cardLayout;
     private HomePanel homePanel;
     private ExportPdfPanel exportPdfPanel;
+    private boolean isMaximized = true;
+    private Rectangle normalBounds;
 
     // Menyimpan semua tombol menu sidebar agar mudah di-reset warnanya
     private final List<JButton> menuButtons = new ArrayList<>();
@@ -36,6 +38,9 @@ public class DashboardFrame extends JFrame {
         setTitle("Aether Project - Aplikasi Berkas Surat");
         setUndecorated(true);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
+        normalBounds = getBounds();
+        isMaximized = true;
+        setMinimumSize(new Dimension(900, 600));
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         initUI();
 
@@ -62,7 +67,7 @@ public class DashboardFrame extends JFrame {
 
         // Membuat panel header di bagian atas aplikasi
         JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(new Color(15, 23, 42));
+        header.setBackground(new Color(2, 6, 23)); // lebih gelap
         header.setPreferredSize(new Dimension(getWidth(), 50));
         header.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
@@ -72,23 +77,24 @@ public class DashboardFrame extends JFrame {
         title.setFont(new Font("Segoe UI", Font.BOLD, 16));
 
         // Tombol keluar aplikasi yang berada di pojok kanan atas header
-        JButton btnExit = new JButton("X");
-        btnExit.setForeground(Color.RED);
+        JButton btnExit = new JButton("✕");
+        btnExit.setForeground(Color.WHITE);
+        btnExit.setBackground(new Color(220, 38, 38)); // merah
         btnExit.setFocusPainted(false);
         btnExit.setBorderPainted(false);
-        btnExit.setContentAreaFilled(false);
-        // Mengubah tampilan tombol saat mouse diarahkan ke tombol keluar
+        btnExit.setOpaque(true);
+        btnExit.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnExit.setPreferredSize(new Dimension(45, 30));
+        btnExit.setFont(new Font("Segoe UI", Font.BOLD, 14));
+
+        // Hover effect
         btnExit.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent e) {
-                btnExit.setOpaque(true);
-                btnExit.setBackground(Color.RED);
-                btnExit.setForeground(Color.WHITE);
+                btnExit.setBackground(new Color(239, 68, 68)); // lebih terang
             }
 
             public void mouseExited(MouseEvent e) {
-                btnExit.setOpaque(false);
-                btnExit.setBackground(null);
-                btnExit.setForeground(Color.RED);
+                btnExit.setBackground(new Color(220, 38, 38));
             }
         });
         btnExit.setFont(new Font("Segoe UI", Font.BOLD, 16));
@@ -105,8 +111,101 @@ public class DashboardFrame extends JFrame {
             }
         });
 
-        header.add(title, BorderLayout.WEST);
-        header.add(btnExit, BorderLayout.EAST);
+        // MINIMIZE
+        JButton btnMinimize = new JButton("—");
+        btnMinimize.setForeground(Color.WHITE);
+        btnMinimize.setBackground(new Color(30, 41, 59));
+        btnMinimize.setFocusPainted(false);
+        btnMinimize.setBorderPainted(false);
+        btnMinimize.setOpaque(true);
+        btnMinimize.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnMinimize.setPreferredSize(new Dimension(45, 30));
+        btnMinimize.setFont(new Font("Segoe UI", Font.BOLD, 14));
+
+        btnMinimize.addActionListener(e -> {
+            setExtendedState(JFrame.ICONIFIED);
+        });
+
+        btnMinimize.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) {
+                btnMinimize.setBackground(new Color(51, 65, 85));
+            }
+
+            public void mouseExited(MouseEvent e) {
+                btnMinimize.setBackground(new Color(30, 41, 59));
+            }
+        });
+
+
+        // MAXIMIZE
+        JButton btnMaximize = new JButton("▢");
+        btnMaximize.setForeground(Color.WHITE);
+        btnMaximize.setBackground(new Color(30, 41, 59));
+        btnMaximize.setFocusPainted(false);
+        btnMaximize.setBorderPainted(false);
+        btnMaximize.setOpaque(true);
+        btnMaximize.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnMaximize.setPreferredSize(new Dimension(45, 30));
+        btnMaximize.setFont(new Font("Segoe UI", Font.BOLD, 14));
+
+        btnMaximize.addActionListener(e -> {
+            if (isMaximized) {
+                // balik ke ukuran sebelumnya
+                setSize(normalBounds.width, normalBounds.height);
+        setLocationRelativeTo(null); // INI YANG BIKIN CENTER
+                isMaximized = false;
+            } else {
+                // simpan ukuran sebelum maximize
+                normalBounds = getBounds();
+                setExtendedState(JFrame.MAXIMIZED_BOTH);
+                isMaximized = true;
+            }
+        });
+
+        btnMaximize.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) {
+                btnMaximize.setBackground(new Color(51, 65, 85));
+            }
+
+            public void mouseExited(MouseEvent e) {
+                btnMaximize.setBackground(new Color(30, 41, 59));
+            }
+        });
+
+        header.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    btnMaximize.doClick();
+                }
+            }
+        });
+
+                header.add(title, BorderLayout.WEST);
+                final Point[] mouseDownCompCoords = {null};
+
+        header.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                mouseDownCompCoords[0] = e.getPoint();
+            }
+        });
+
+        header.addMouseMotionListener(new MouseAdapter() {
+            public void mouseDragged(MouseEvent e) {
+                Point currCoords = e.getLocationOnScreen();
+                setLocation(
+                    currCoords.x - mouseDownCompCoords[0].x,
+                    currCoords.y - mouseDownCompCoords[0].y
+                );
+            }
+        });
+        JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 5));
+        controlPanel.setOpaque(false);
+
+        controlPanel.add(btnMinimize);
+        controlPanel.add(btnMaximize);
+        controlPanel.add(btnExit);
+
+        header.add(controlPanel, BorderLayout.EAST);
 
         // Tambahin ke frame
         add(header, BorderLayout.NORTH);

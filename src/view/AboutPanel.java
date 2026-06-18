@@ -98,14 +98,26 @@ public class AboutPanel extends JPanel {
         ));
 
         // =========================
+        // CARD TECH STACK
+        // =========================
+        mainPanel.add(createCard(
+                "🛠️ Tech Stack",
+                "Java 8\n" +
+                "Swing\n" +
+                "FlatLaf (UI)\n" +
+                "SQLite (JDBC)\n" +
+                "iText PDF"
+        ));
+
+        // =========================
         // CARD TIM PENGEMBANG
         // =========================
         mainPanel.add(createCard(
                 "👨‍💻 Tim Pengembang",
-                "Wisnu Septa Harianto Putra\n" +
-                "Nawfal Krisna Aghafazli\n" +
-                "Ridhoi Wahyu Saputra\n" +
-                "Hana Joma Naomi"
+                "Wisnu Septa Harianto Putra (Backend)\\n" +
+                "Hana Joma Naomi (Full Stack)\\n" +
+                "Nawfal Krisna Aghafazli (Frontend)\\n" +
+                "Ridhoi Wahyu Saputra (UI / UX)"
         ));
 
         // ScrollPane digunakan agar isi panel dapat digulir

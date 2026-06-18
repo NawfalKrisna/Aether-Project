@@ -23,6 +23,7 @@ public class HomePanel extends JPanel {
     private JLabel totalKeluarLabel;
     private JLabel totalSuratLabel;
     private JLabel suratHariIniLabel;
+    private JTable table;
     private DefaultTableModel model;
     private TableRowSorter<DefaultTableModel> rowSorter;
     private JTextField searchField;
@@ -143,10 +144,16 @@ public class HomePanel extends JPanel {
                 "Nomor Surat",
                 "Jenis Surat",
                 "Tanggal",
-                "Perihal"
+                "Perihal",
+                "Aksi"
         };
 
-        model = new DefaultTableModel(columns, 0);
+        model = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return column == 5; // only Aksi column
+            }
+        };
         rowSorter = new TableRowSorter<>(model);
 
         // Custom comparator: parse "dd/MM/yyyy" strings into real Date objects
@@ -167,7 +174,7 @@ public class HomePanel extends JPanel {
             }
         });
 
-        JTable table = new JTable(model);
+        table = new JTable(model);
         table.setRowSorter(rowSorter);
         for (java.awt.event.MouseListener ml : table.getTableHeader().getMouseListeners()) {
             table.getTableHeader().removeMouseListener(ml);
@@ -274,6 +281,7 @@ public class HomePanel extends JPanel {
         totalSuratLabel.setText(String.valueOf(totalSurat));
         suratHariIniLabel.setText(String.valueOf(suratHariIni));
 
+        // semuaSurat: [tanggal, nomorSurat, jenisSurat, perihal, id, pengirim/penerima]
         List<Object[]> semuaSurat = new ArrayList<>();
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
@@ -283,7 +291,9 @@ public class HomePanel extends JPanel {
                     surat.getTanggal(),
                     surat.getNomorSurat(),
                     "Surat Masuk",
-                    surat.getPerihal()
+                    surat.getPerihal(),
+                    surat.getId(),
+                    surat.getPengirim()
             });
         }
 
@@ -293,7 +303,9 @@ public class HomePanel extends JPanel {
                     surat.getTanggal(),
                     surat.getNomorSurat(),
                     "Surat Keluar",
-                    surat.getPerihal()
+                    surat.getPerihal(),
+                    surat.getId(),
+                    surat.getPenerima()
             });
         }
 
@@ -308,19 +320,36 @@ public class HomePanel extends JPanel {
                 });
 
         model.setRowCount(0);
+        // Store extra data per row for PDF export
+        dashboardExtraData.clear();
         int no = 1;
         for (Object[] row : semuaSurat) {
             if (no > 10) {
                 break;
             }
             model.addRow(new Object[] {
-                    no++,
+                    no,
                     row[1],
                     row[2],
                     sdf.format((java.util.Date) row[0]),
-                    row[3]
+                    row[3],
+                    "Download PDF"
             });
+            // Store: [id, jenisSurat, pengirim/penerima, nomorSurat, tanggalFormatted, perihal]
+            dashboardExtraData.add(new Object[] {
+                    row[4],       // id
+                    row[2],       // jenis surat
+                    row[5],       // pengirim/penerima
+                    row[1],       // nomor surat
+                    sdf.format((java.util.Date) row[0]),  // tanggal
+                    row[3]        // perihal
+            });
+            no++;
         }
+
+        // Set button renderer/editor for Aksi column
+        table.getColumn("Aksi").setCellRenderer(new ButtonRenderer());
+        table.getColumn("Aksi").setCellEditor(new ButtonEditor(new JCheckBox()));
     }
 
     private JPanel createCard(String title, JLabel countLabel, Color bgColor, Color textColor) {
@@ -341,5 +370,124 @@ public class HomePanel extends JPanel {
         card.add(titleLabel, BorderLayout.NORTH);
         card.add(countLabel, BorderLayout.CENTER);
         return card;
+    }
+
+    // Extra data per row for PDF generation (parallel to table model rows)
+    private final List<Object[]> dashboardExtraData = new ArrayList<>();
+
+    // ==================== Button Renderer ====================
+    class ButtonRenderer extends JButton implements javax.swing.table.TableCellRenderer {
+        public ButtonRenderer() {
+            setOpaque(true);
+        }
+
+        @Override
+        public java.awt.Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                boolean hasFocus, int row, int column) {
+            setText(value == null ? "" : value.toString());
+            return this;
+        }
+    }
+
+    // ==================== Button Editor ====================
+    class ButtonEditor extends DefaultCellEditor {
+        protected JButton button;
+        private String label;
+        private boolean clicked;
+        private int row;
+
+        public ButtonEditor(JCheckBox checkBox) {
+            super(checkBox);
+            button = new JButton();
+            button.setOpaque(true);
+            button.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent e) {
+                    fireEditingStopped();
+                }
+            });
+        }
+
+        @Override
+        public java.awt.Component getTableCellEditorComponent(JTable tbl, Object value, boolean isSelected,
+                int row, int column) {
+            this.label = value == null ? "" : value.toString();
+            button.setText(label);
+            this.clicked = true;
+            this.row = row;
+            return button;
+        }
+
+        @Override
+        public Object getCellEditorValue() {
+            if (clicked) {
+                try {
+                    if ("Download PDF".equals(label) && row < dashboardExtraData.size()) {
+                        Object[] extra = dashboardExtraData.get(row);
+                        String id = String.valueOf(extra[0]);
+                        String jenisSurat = String.valueOf(extra[1]);
+                        String pihak = String.valueOf(extra[2]);
+                        String nomor = String.valueOf(extra[3]);
+                        String tanggalStr = String.valueOf(extra[4]);
+                        String perihal = String.valueOf(extra[5]);
+
+                        boolean isMasuk = "Surat Masuk".equals(jenisSurat);
+                        String pihakLabel = isMasuk ? "Pengirim" : "Penerima";
+
+                        String[][] fields = {
+                                { "ID", id },
+                                { "Nomor Surat", nomor },
+                                { "Tanggal", tanggalStr },
+                                { pihakLabel, pihak },
+                                { "Perihal", perihal }
+                        };
+
+                        String safePihak = pihak.replaceAll("[^a-zA-Z0-9]", "_");
+                        String defaultName = jenisSurat.replace(" ", "_") + "_" + id + "_" + safePihak + ".pdf";
+
+                        JFileChooser chooser = new JFileChooser();
+                        chooser.setDialogTitle("Simpan Detail PDF");
+                        chooser.setSelectedFile(new java.io.File(defaultName));
+                        chooser.setFileFilter(
+                                new javax.swing.filechooser.FileNameExtensionFilter(
+                                        "PDF Files (*.pdf)", "pdf"));
+
+                        int result = chooser.showSaveDialog(HomePanel.this);
+                        if (result == JFileChooser.APPROVE_OPTION) {
+                            String filePath = chooser.getSelectedFile().getAbsolutePath();
+                            if (!filePath.toLowerCase().endsWith(".pdf")) {
+                                filePath += ".pdf";
+                            }
+                            boolean ok = service.PdfExporter.exportDetailToPdf(
+                                    "Detail " + jenisSurat, fields, filePath);
+                            if (ok) {
+                                JOptionPane.showMessageDialog(HomePanel.this,
+                                        "PDF berhasil disimpan:\n" + filePath);
+                            } else {
+                                JOptionPane.showMessageDialog(HomePanel.this,
+                                        "Gagal membuat PDF.",
+                                        "Error", JOptionPane.ERROR_MESSAGE);
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(HomePanel.this,
+                            "Gagal memproses aksi: " + ex.getMessage());
+                }
+            }
+            clicked = false;
+            return label;
+        }
+
+        @Override
+        public boolean stopCellEditing() {
+            clicked = false;
+            return super.stopCellEditing();
+        }
+
+        @Override
+        protected void fireEditingStopped() {
+            super.fireEditingStopped();
+        }
     }
 }

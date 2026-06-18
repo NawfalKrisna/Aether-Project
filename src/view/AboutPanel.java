@@ -44,12 +44,13 @@ public class AboutPanel extends JPanel {
                 // Judul utama aplikasi
                 JLabel title = new JLabel("AETHER PROJECT");
                 title.setFont(new Font("Segoe UI", Font.BOLD, 32));
+                title.setForeground(new Color(37, 99, 235));
                 title.setAlignmentX(Component.CENTER_ALIGNMENT);
 
                 // Subjudul aplikasi
                 JLabel subtitle = new JLabel("Digital Mail Management System");
                 subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-                subtitle.setForeground(Color.GRAY);
+                subtitle.setForeground(new Color(100, 116, 139));
                 subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
                 // Menambahkan komponen ke panel utama
@@ -105,7 +106,7 @@ public class AboutPanel extends JPanel {
                                                 "iText PDF"));
 
                 // =========================
-                // CARD TIM PENGEMBANG
+                // ✓ CARD TIM PENGEMBANG
                 // =========================
                 mainPanel.add(createCard(
                                 "Tim Pengembang",
@@ -144,7 +145,7 @@ public class AboutPanel extends JPanel {
                 JPanel card = new JPanel(new BorderLayout());
 
                 // Warna latar card
-                card.setBackground(Color.WHITE);
+                card.setBackground(new Color(248, 250, 252));
 
                 // Border luar dan padding dalam card
                 card.setBorder(BorderFactory.createCompoundBorder(
@@ -154,16 +155,34 @@ public class AboutPanel extends JPanel {
                 // Label judul card
                 JLabel lblTitle = new JLabel(title);
                 lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
+                if (title.contains("About")) {
+                        lblTitle.setForeground(new Color(37, 99, 235));
+                } else if (title.contains("Tujuan")) {
+                        lblTitle.setForeground(new Color(16, 185, 129));
+                } else if (title.contains("Fitur")) {
+                        lblTitle.setForeground(new Color(245, 158, 11));
+                } else if (title.contains("Informasi")) {
+                        lblTitle.setForeground(new Color(99, 102, 241));
+                } else if (title.contains("Tech")) {
+                        lblTitle.setForeground(new Color(168, 85, 247));
+                } else {
+                        lblTitle.setForeground(new Color(15, 23, 42));
+                }
 
                 // Area teks isi card
                 JTextArea txtContent = new JTextArea(content);
                 txtContent.setEditable(false);
-                txtContent.setBackground(Color.WHITE);
+                txtContent.setBackground(new Color(248, 250, 252));
                 txtContent.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                txtContent.setForeground(new Color(71, 85, 105));
                 if (title.equals("Tim Pengembang")) {
-                        card.setBackground(new Color(235, 245, 255));
-                        txtContent.setBackground(new Color(235, 245, 255));
-                        lblTitle.setForeground(new Color(0, 102, 204));
+                        card.setBackground(new Color(219, 234, 254));
+                        txtContent.setBackground(new Color(219, 234, 254));
+
+                        lblTitle.setForeground(new Color(30, 64, 175));
+                        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
+
+                        txtContent.setForeground(new Color(30, 41, 59));
                         txtContent.setFont(new Font("Segoe UI", Font.PLAIN, 15));
                 }
 

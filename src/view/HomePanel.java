@@ -33,16 +33,22 @@ public class HomePanel extends JPanel {
     private TableRowSorter<DefaultTableModel> rowSorter;
     private JTextField searchField;
     private JComboBox<String> filterJenisCombo;
+    private JPanel chartContainer;
 
     public HomePanel() {
-        setLayout(new BorderLayout(20, 20));
+        setLayout(new BorderLayout());
         setBackground(new Color(248, 250, 252));
-        setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
         initUI();
         loadDashboardData();
     }
 
     private void initUI() {
+        // Scrollable content wrapper
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.setBackground(new Color(248, 250, 252));
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
+
         // Header
         JPanel headerPanel = new JPanel(new GridLayout(2, 1, 0, 5));
         headerPanel.setOpaque(false);
@@ -53,11 +59,13 @@ public class HomePanel extends JPanel {
         subtitleLabel.setForeground(Color.GRAY);
         headerPanel.add(welcomeLabel);
         headerPanel.add(subtitleLabel);
+        headerPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, headerPanel.getPreferredSize().height));
 
         // Cards Panel
         JPanel cardsPanel = new JPanel(new GridLayout(1, 4, 20, 0));
         cardsPanel.setOpaque(false);
         cardsPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
+        cardsPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 120));
 
         totalMasukLabel = new JLabel();
         totalKeluarLabel = new JLabel();
@@ -70,25 +78,17 @@ public class HomePanel extends JPanel {
         cardsPanel
                 .add(createCard("Surat Hari Ini", suratHariIniLabel, new Color(255, 237, 213), new Color(234, 88, 12)));
 
-        JPanel topContainer = new JPanel(new BorderLayout(0, 15));
-topContainer.setOpaque(false);
+        contentPanel.add(headerPanel);
+        contentPanel.add(cardsPanel);
 
-topContainer.add(headerPanel, BorderLayout.NORTH);
+        // Chart container (populated in loadDashboardData)
+        chartContainer = new JPanel(new BorderLayout());
+        chartContainer.setOpaque(false);
+        chartContainer.setMaximumSize(new Dimension(Integer.MAX_VALUE, 280));
+        chartContainer.setPreferredSize(new Dimension(0, 280));
+        contentPanel.add(chartContainer);
 
-JPanel centerSection = new JPanel();
-centerSection.setOpaque(false);
-centerSection.setLayout(new BoxLayout(centerSection, BoxLayout.Y_AXIS));
-
-centerSection.add(cardsPanel);
-centerSection.add(Box.createVerticalStrut(15));
-
-
-
-topContainer.add(centerSection, BorderLayout.CENTER);
-
-
-
-add(topContainer, BorderLayout.NORTH);
+        contentPanel.add(Box.createVerticalStrut(20));
 
         // Recent Table
         JPanel tableContainer = new JPanel(new BorderLayout());
@@ -247,7 +247,16 @@ add(topContainer, BorderLayout.NORTH);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
         tableContainer.add(scrollPane, BorderLayout.CENTER);
 
-        add(tableContainer, BorderLayout.CENTER);
+        contentPanel.add(tableContainer);
+
+        // Wrap everything in a scroll pane
+        JScrollPane pageScroll = new JScrollPane(contentPanel);
+        pageScroll.setBorder(BorderFactory.createEmptyBorder());
+        pageScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        pageScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        pageScroll.getVerticalScrollBar().setUnitIncrement(16);
+
+        add(pageScroll, BorderLayout.CENTER);
     }
 
     public void refreshData() {
@@ -301,13 +310,12 @@ add(topContainer, BorderLayout.NORTH);
 
         chartContainer.removeAll();
 
-chartContainer.add(
-    createPieChartPanel(totalMasuk, totalKeluar),
-    BorderLayout.CENTER
-);
+        chartContainer.add(
+                createPieChartPanel(totalMasuk, totalKeluar),
+                BorderLayout.CENTER);
 
-chartContainer.revalidate();
-chartContainer.repaint();
+        chartContainer.revalidate();
+        chartContainer.repaint();
 
         // semuaSurat: [tanggal, nomorSurat, jenisSurat, perihal, id, pengirim/penerima]
         List<Object[]> semuaSurat = new ArrayList<>();
@@ -363,14 +371,15 @@ chartContainer.repaint();
                     row[3],
                     "Download PDF"
             });
-            // Store: [id, jenisSurat, pengirim/penerima, nomorSurat, tanggalFormatted, perihal]
+            // Store: [id, jenisSurat, pengirim/penerima, nomorSurat, tanggalFormatted,
+            // perihal]
             dashboardExtraData.add(new Object[] {
-                    row[4],       // id
-                    row[2],       // jenis surat
-                    row[5],       // pengirim/penerima
-                    row[1],       // nomor surat
-                    sdf.format((java.util.Date) row[0]),  // tanggal
-                    row[3]        // perihal
+                    row[4], // id
+                    row[2], // jenis surat
+                    row[5], // pengirim/penerima
+                    row[1], // nomor surat
+                    sdf.format((java.util.Date) row[0]), // tanggal
+                    row[3] // perihal
             });
             no++;
         }
@@ -380,37 +389,33 @@ chartContainer.repaint();
         table.getColumn("Aksi").setCellEditor(new ButtonEditor(new JCheckBox()));
     }
 
+    private JPanel createPieChartPanel(int masuk, int keluar) {
 
-private JPanel createPieChartPanel(int masuk, int keluar) {
+        DefaultPieDataset<String> dataset = new DefaultPieDataset<>();
 
-    DefaultPieDataset<String> dataset = new DefaultPieDataset<>();
+        dataset.setValue("Surat Masuk", masuk);
+        dataset.setValue("Surat Keluar", keluar);
 
-    dataset.setValue("Surat Masuk", masuk);
-    dataset.setValue("Surat Keluar", keluar);
+        JFreeChart chart = ChartFactory.createPieChart(
+                "Statistik Surat",
+                dataset,
+                true,
+                true,
+                false);
 
-    JFreeChart chart = ChartFactory.createPieChart(
-            "Statistik Surat",
-            dataset,
-            true,
-            true,
-            false);
+        ChartPanel chartPanel = new ChartPanel(chart);
+        chartPanel.setPreferredSize(new Dimension(500, 250));
 
-    ChartPanel chartPanel = new ChartPanel(chart);
-    chartPanel.setPreferredSize(new Dimension(500, 250));
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(226, 232, 240), 1),
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)));
 
-    JPanel panel = new JPanel(new BorderLayout());
-    panel.setBackground(Color.WHITE);
-    panel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(226, 232, 240), 1),
-            BorderFactory.createEmptyBorder(10, 10, 10, 10)));
+        panel.add(chartPanel, BorderLayout.CENTER);
 
-    panel.add(chartPanel, BorderLayout.CENTER);
-
-    return panel;
-}
-
-
-
+        return panel;
+    }
 
     // ==================== Card Creation ====================
     private JPanel createCard(String title, JLabel countLabel, Color bgColor, Color textColor) {

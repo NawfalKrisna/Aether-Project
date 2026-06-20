@@ -9,6 +9,7 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class DashboardFrame extends JFrame {
     private JLabel title;
     private JPanel mainContentPanel;

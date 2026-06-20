@@ -17,6 +17,11 @@ import java.text.SimpleDateFormat;
 
 import java.awt.*;
 
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.data.general.DefaultPieDataset;
+
 public class HomePanel extends JPanel {
 
     private JLabel totalMasukLabel;
@@ -65,12 +70,25 @@ public class HomePanel extends JPanel {
         cardsPanel
                 .add(createCard("Surat Hari Ini", suratHariIniLabel, new Color(255, 237, 213), new Color(234, 88, 12)));
 
-        JPanel topContainer = new JPanel(new BorderLayout());
-        topContainer.setOpaque(false);
-        topContainer.add(headerPanel, BorderLayout.NORTH);
-        topContainer.add(cardsPanel, BorderLayout.CENTER);
+        JPanel topContainer = new JPanel(new BorderLayout(0, 15));
+topContainer.setOpaque(false);
 
-        add(topContainer, BorderLayout.NORTH);
+topContainer.add(headerPanel, BorderLayout.NORTH);
+
+JPanel centerSection = new JPanel();
+centerSection.setOpaque(false);
+centerSection.setLayout(new BoxLayout(centerSection, BoxLayout.Y_AXIS));
+
+centerSection.add(cardsPanel);
+centerSection.add(Box.createVerticalStrut(15));
+
+
+
+topContainer.add(centerSection, BorderLayout.CENTER);
+
+
+
+add(topContainer, BorderLayout.NORTH);
 
         // Recent Table
         JPanel tableContainer = new JPanel(new BorderLayout());
@@ -281,6 +299,16 @@ public class HomePanel extends JPanel {
         totalSuratLabel.setText(String.valueOf(totalSurat));
         suratHariIniLabel.setText(String.valueOf(suratHariIni));
 
+        chartContainer.removeAll();
+
+chartContainer.add(
+    createPieChartPanel(totalMasuk, totalKeluar),
+    BorderLayout.CENTER
+);
+
+chartContainer.revalidate();
+chartContainer.repaint();
+
         // semuaSurat: [tanggal, nomorSurat, jenisSurat, perihal, id, pengirim/penerima]
         List<Object[]> semuaSurat = new ArrayList<>();
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
@@ -352,6 +380,39 @@ public class HomePanel extends JPanel {
         table.getColumn("Aksi").setCellEditor(new ButtonEditor(new JCheckBox()));
     }
 
+
+private JPanel createPieChartPanel(int masuk, int keluar) {
+
+    DefaultPieDataset<String> dataset = new DefaultPieDataset<>();
+
+    dataset.setValue("Surat Masuk", masuk);
+    dataset.setValue("Surat Keluar", keluar);
+
+    JFreeChart chart = ChartFactory.createPieChart(
+            "Statistik Surat",
+            dataset,
+            true,
+            true,
+            false);
+
+    ChartPanel chartPanel = new ChartPanel(chart);
+    chartPanel.setPreferredSize(new Dimension(500, 250));
+
+    JPanel panel = new JPanel(new BorderLayout());
+    panel.setBackground(Color.WHITE);
+    panel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(226, 232, 240), 1),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)));
+
+    panel.add(chartPanel, BorderLayout.CENTER);
+
+    return panel;
+}
+
+
+
+
+    // ==================== Card Creation ====================
     private JPanel createCard(String title, JLabel countLabel, Color bgColor, Color textColor) {
         JPanel card = new JPanel(new BorderLayout());
         card.setBackground(Color.WHITE);

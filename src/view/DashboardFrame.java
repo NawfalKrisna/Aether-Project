@@ -9,7 +9,6 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class DashboardFrame extends JFrame {
     private JLabel title;
     private JPanel mainContentPanel;
@@ -66,16 +65,134 @@ public class DashboardFrame extends JFrame {
     private void initUI() {
         setLayout(new BorderLayout());
 
+        // Sidebar Panel (Deklarasi di awal agar bisa diakses oleh tombol toggle)
+        JPanel sidebar = new JPanel();
+
         // Membuat panel header di bagian atas aplikasi
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(new Color(2, 6, 23)); // lebih gelap
         header.setPreferredSize(new Dimension(getWidth(), 50));
         header.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
+        // Tombol Toggle Sidebar di dalam Sidebar
+        JButton btnToggleSidebar = new JButton(new MenuIcon("burgerbar"));
+        btnToggleSidebar.setToolTipText("Buka/Tutup Sidebar");
+        btnToggleSidebar.setForeground(Color.WHITE);
+        btnToggleSidebar.setBackground(new Color(15, 23, 42)); // Sesuai warna sidebar
+        btnToggleSidebar.setFocusPainted(false);
+        btnToggleSidebar.setBorderPainted(false);
+        btnToggleSidebar.setOpaque(true);
+        btnToggleSidebar.setFont(new Font("SansSerif", Font.BOLD, 18));
+        btnToggleSidebar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Buat agar memenuhi lebar penuh sidebar
+        btnToggleSidebar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        btnToggleSidebar.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btnToggleSidebar.setHorizontalAlignment(SwingConstants.LEFT);
+        btnToggleSidebar.setMargin(new Insets(0, 15, 0, 0)); // Margin kiri 15px
+
+        btnToggleSidebar.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) {
+                btnToggleSidebar.setBackground(new Color(30, 41, 59));
+            }
+
+            public void mouseExited(MouseEvent e) {
+                btnToggleSidebar.setBackground(new Color(15, 23, 42));
+            }
+        });
+
+        // Logika Animasi Slide (Mini Sidebar)
+        final int TARGET_WIDTH = 250;
+        final int COLLAPSED_WIDTH = 45;
+        final int[] currentWidth = { TARGET_WIDTH };
+        final boolean[] isSidebarOpen = { true };
+        final Timer[] slideTimer = { null };
+
+        ActionListener toggleAction = e -> {
+            if (slideTimer[0] != null && slideTimer[0].isRunning()) {
+                return;
+            }
+            if (isSidebarOpen[0]) {
+                // Sembunyikan label (misal Admin User)
+                for (Component c : sidebar.getComponents()) {
+                    if (c instanceof JLabel) {
+                        c.setVisible(false);
+                    }
+                }
+
+                // Sembunyikan teks, biarkan hanya icon yang tampil
+                for (JButton btn : menuButtons) {
+                    btn.setText("");
+                    btn.setHorizontalAlignment(SwingConstants.CENTER);
+                    btn.setMargin(new Insets(0, 0, 0, 0));
+                }
+                btnToggleSidebar.setHorizontalAlignment(SwingConstants.CENTER);
+                btnToggleSidebar.setMargin(new Insets(0, 0, 0, 0));
+
+                // Proses Tutup (Slide ke kiri sampai 45px)
+                slideTimer[0] = new Timer(10, ev -> {
+                    currentWidth[0] -= 25;
+                    if (currentWidth[0] <= COLLAPSED_WIDTH) {
+                        currentWidth[0] = COLLAPSED_WIDTH;
+                        slideTimer[0].stop();
+                        isSidebarOpen[0] = false;
+                    }
+                    Dimension d = new Dimension(currentWidth[0], sidebar.getHeight() > 0 ? sidebar.getHeight() : 600);
+                    sidebar.setPreferredSize(d);
+                    sidebar.setMinimumSize(d);
+                    sidebar.setMaximumSize(d);
+                    sidebar.revalidate();
+                    getContentPane().validate();
+                    repaint();
+                });
+                slideTimer[0].start();
+            } else {
+                // Proses Buka (Slide ke kanan)
+                slideTimer[0] = new Timer(10, ev -> {
+                    currentWidth[0] += 25;
+                    if (currentWidth[0] >= TARGET_WIDTH) {
+                        currentWidth[0] = TARGET_WIDTH;
+                        slideTimer[0].stop();
+                        isSidebarOpen[0] = true;
+
+                        // Tampilkan kembali label
+                        for (Component c : sidebar.getComponents()) {
+                            if (c instanceof JLabel) {
+                                c.setVisible(true);
+                            }
+                        }
+
+                        // Kembalikan teks tombol dan posisikan di kiri
+                        for (JButton btn : menuButtons) {
+                            btn.setText((String) btn.getClientProperty("fullText"));
+                            btn.setHorizontalAlignment(SwingConstants.LEFT);
+                            btn.setMargin(new Insets(0, 15, 0, 0));
+                        }
+                        btnToggleSidebar.setHorizontalAlignment(SwingConstants.LEFT);
+                        btnToggleSidebar.setMargin(new Insets(0, 15, 0, 0));
+                    }
+                    Dimension d = new Dimension(currentWidth[0], sidebar.getHeight() > 0 ? sidebar.getHeight() : 600);
+                    sidebar.setPreferredSize(d);
+                    sidebar.setMinimumSize(d);
+                    sidebar.setMaximumSize(d);
+                    sidebar.revalidate();
+                    getContentPane().validate();
+                    repaint();
+                });
+                slideTimer[0].start();
+            }
+        };
+
+        btnToggleSidebar.addActionListener(toggleAction);
+
         // Label judul aplikasi yang ditampilkan pada header
         title = new JLabel("AETHER PROJECT");
         title.setForeground(Color.WHITE);
         title.setFont(new Font("Segoe UI", Font.BOLD, 16));
+
+        JPanel titlePanel = new JPanel(new BorderLayout(15, 0));
+        titlePanel.setOpaque(false);
+        titlePanel.add(title, BorderLayout.CENTER);
 
         // Tombol keluar aplikasi yang berada di pojok kanan atas header
         JButton btnExit = new JButton("X");
@@ -181,7 +298,7 @@ public class DashboardFrame extends JFrame {
             }
         });
 
-        header.add(title, BorderLayout.WEST);
+        header.add(titlePanel, BorderLayout.WEST);
         final Point[] mouseDownCompCoords = { null };
 
         header.addMouseListener(new MouseAdapter() {
@@ -212,20 +329,17 @@ public class DashboardFrame extends JFrame {
 
         // Sidebar Panel
         // Membuat panel sidebar sebagai menu navigasi aplikasi
-        JPanel sidebar = new JPanel();
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
         sidebar.setBackground(new Color(15, 23, 42)); // Dark blue background (#0F172A)
-        sidebar.setPreferredSize(new Dimension(250, getHeight()));
-        sidebar.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
+        sidebar.setPreferredSize(new Dimension(250, 0));
+        sidebar.setBorder(BorderFactory.createEmptyBorder(10, 0, 20, 0)); // Dihilangkan border kiri-kanan agar tombol
+                                                                          // bisa full width
 
-        // Logo Area
-        // Label logo atau nama aplikasi pada sidebar
-        JLabel logoLabel = new JLabel("AETHER PROJECT");
-        logoLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        logoLabel.setForeground(Color.WHITE);
-        logoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        logoLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 30, 0));
-        sidebar.add(logoLabel);
+        // Tambahkan tombol toggle langsung ke sidebar agar ukurannya stretch full width
+        sidebar.add(btnToggleSidebar);
+        sidebar.add(Box.createRigidArea(new Dimension(0, 10))); // Spacing bawah toggle
+
+        // Logo dihapus karena sudah ada di header
 
         // CardLayout digunakan untuk berpindah antar halaman tanpa membuka window baru
         cardLayout = new CardLayout();
@@ -250,9 +364,7 @@ public class DashboardFrame extends JFrame {
         mainContentPanel.add(exportPdfPanel, "ExportPDF");
         mainContentPanel.add(aboutPanel, "About");
 
-        // Menu Buttons
-        // Menambahkan tombol menu ke sidebar beserta tujuan panel yang ditampilkan saat
-        // tombol diklik
+        // Menu Buttons dengan Custom Vector Icons
         addMenuButton(sidebar, "Dashboard", "Dashboard");
         addMenuButton(sidebar, "Surat Masuk", "SuratMasuk");
         addMenuButton(sidebar, "Surat Keluar", "SuratKeluar");
@@ -279,7 +391,7 @@ public class DashboardFrame extends JFrame {
     public void showDashboard() {
         resetAllMenuButtons();
         for (JButton btn : menuButtons) {
-            if ("Dashboard".equals(btn.getText())) {
+            if ("Dashboard".equals(btn.getClientProperty("fullText"))) {
                 btn.setBackground(ACTIVE_BG);
                 btn.setForeground(ACTIVE_FG);
                 btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
@@ -305,7 +417,7 @@ public class DashboardFrame extends JFrame {
         resetAllMenuButtons();
         // Find and highlight the Export PDF button
         for (JButton btn : menuButtons) {
-            if ("Export PDF".equals(btn.getText())) {
+            if ("Export PDF".equals(btn.getClientProperty("fullText"))) {
                 btn.setBackground(ACTIVE_BG);
                 btn.setForeground(ACTIVE_FG);
                 btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
@@ -337,6 +449,9 @@ public class DashboardFrame extends JFrame {
 
     private void addMenuButton(JPanel sidebar, String text, String cardName) {
         JButton btn = new JButton(text);
+        btn.setIcon(new MenuIcon(text));
+        btn.setIconTextGap(15);
+        btn.putClientProperty("fullText", text);
         btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
         btn.setAlignmentX(Component.CENTER_ALIGNMENT);
         btn.setBackground(SIDEBAR_BG);
@@ -346,14 +461,9 @@ public class DashboardFrame extends JFrame {
         btn.setOpaque(true);
         btn.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setHorizontalAlignment(SwingConstants.LEFT);
+        btn.setMargin(new Insets(0, 15, 0, 0)); // Match margin toggle sidebar
 
-        /**
-         * Membuat tombol menu sidebar beserta fungsi navigasinya.
-         *
-         * @param sidebar  Panel sidebar tempat tombol ditambahkan
-         * @param text     Teks yang ditampilkan pada tombol
-         * @param cardName Nama panel tujuan pada CardLayout
-         */
         btn.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
@@ -403,5 +513,66 @@ public class DashboardFrame extends JFrame {
     // Mengubah judul halaman pada bagian header sesuai dengan menu yang dipilih
     public void setPageTitle(String text) {
         title.setText(text);
+    }
+
+    // Custom Icon untuk Sidebar agar cross-platform dan ukurannya presisi
+    private static class MenuIcon implements Icon {
+        private String type;
+
+        public MenuIcon(String type) {
+            this.type = type;
+        }
+
+        @Override
+        public int getIconWidth() {
+            return 18;
+        }
+
+        @Override
+        public int getIconHeight() {
+            return 18;
+        }
+
+        @Override
+        public void paintIcon(Component c, Graphics g, int x, int y) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(c.getForeground());
+            g2.setStroke(new BasicStroke(1.8f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+
+            if (type.equals("Hamburger")) {
+                g2.drawLine(x + 2, y + 4, x + 16, y + 4);
+                g2.drawLine(x + 2, y + 9, x + 16, y + 9);
+                g2.drawLine(x + 2, y + 14, x + 16, y + 14);
+            } else if (type.equals("Dashboard")) {
+                int[] px = { x + 9, x + 16, x + 2 };
+                int[] py = { y + 2, y + 8, y + 8 };
+                g2.drawPolygon(px, py, 3);
+                g2.drawRect(x + 4, y + 8, 10, 8);
+            } else if (type.equals("Surat Masuk")) {
+                g2.drawRect(x + 3, y + 2, 12, 12);
+                g2.drawLine(x + 9, y + 4, x + 9, y + 10);
+                g2.drawLine(x + 6, y + 7, x + 9, y + 10);
+                g2.drawLine(x + 12, y + 7, x + 9, y + 10);
+            } else if (type.equals("Surat Keluar")) {
+                g2.drawRect(x + 3, y + 2, 12, 12);
+                g2.drawLine(x + 9, y + 10, x + 9, y + 4);
+                g2.drawLine(x + 6, y + 7, x + 9, y + 4);
+                g2.drawLine(x + 12, y + 7, x + 9, y + 4);
+            } else if (type.equals("Arsip Semua Surat")) {
+                g2.drawRect(x + 2, y + 3, 14, 12);
+                g2.drawLine(x + 2, y + 7, x + 16, y + 7);
+            } else if (type.equals("Export PDF")) {
+                g2.drawRect(x + 3, y + 2, 12, 14);
+                g2.drawLine(x + 6, y + 6, x + 12, y + 6);
+                g2.drawLine(x + 6, y + 9, x + 12, y + 9);
+                g2.drawLine(x + 6, y + 12, x + 10, y + 12);
+            } else if (type.equals("About")) {
+                g2.drawOval(x + 2, y + 2, 14, 14);
+                g2.drawLine(x + 9, y + 6, x + 9, y + 6); // dot
+                g2.drawLine(x + 9, y + 8, x + 9, y + 13); // line
+            }
+            g2.dispose();
+        }
     }
 }
